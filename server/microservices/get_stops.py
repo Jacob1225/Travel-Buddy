@@ -23,11 +23,11 @@ def get_stops(request):
 
         for stop in stops.itertuples():
             if calculate_distance(curr_lat, stop.stop_lat, curr_lon, stop.stop_lon) <= radius:
-                print(stop)  # for now get shop information
+                print(stop)  # for now get stop information
 
         return ("stops retrieved", 200)
 
-    #TODO change exception when testing and new exceptions are known
+    # TODO change exception when testing and new exceptions are known
     except Exception as e:
         print(str(e))
         return ("Error retriveing stops", 500)
