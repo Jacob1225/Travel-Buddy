@@ -27,6 +27,7 @@ def get_stops(request):
 
         return ("stops retrieved", 200)
 
+    #TODO change exception when testing and new exceptions are known
     except Exception as e:
         print(str(e))
         return ("Error retriveing stops", 500)
