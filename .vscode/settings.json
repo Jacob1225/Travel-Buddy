@@ -1,6 +1,0 @@
-{
-    "python.languageServer": "None",
-    "python.formatting.provider": "black",
-    "editor.formatOnSave": true,
-    "python.pythonPath": "/usr/local/bin/python3"
-}
