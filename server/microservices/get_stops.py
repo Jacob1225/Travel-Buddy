@@ -1,5 +1,5 @@
 import pandas as pd
-from ..libraries .distance import calculate_distance
+from ..libraries.distance import calculate_distance
 
 DEFAULT_RADIUS = 2
 
