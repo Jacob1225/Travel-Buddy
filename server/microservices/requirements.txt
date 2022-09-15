@@ -1,5 +1,6 @@
 gcfs
 pandas
+dacite
 requests
 gtfs-realtime-bindings
 google-cloud-secret-manager
