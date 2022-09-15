@@ -8,15 +8,13 @@ class StmAPi:
         self.api_key = api_key
 
     """
-        Endpoint to retrieve the vehicle positions from api
-        No input parameters needed
+        Private method that setups up the feed and executes the request
+        Takes in the stm endpoint url as input
+        returns the feed or None if error occured
     """
 
-    def get_vehicle_positions(self):
-
+    def __feedsetup(self, url):
         try:
-            url = "https://api.stm.info/pub/od/gtfs-rt/ic/v2/vehiclePositions"
-
             feed = gtfs_realtime_pb2.FeedMessage()
 
             response = Request(url)
@@ -30,3 +28,24 @@ class StmAPi:
         except Exception as e:
             print(str(e))
             return None
+
+    """
+        Endpoint to retrieve the vehicle positions from api
+        No input parameters needed
+    """
+
+    def get_vehicle_positions(self):
+
+        url = "https://api.stm.info/pub/od/gtfs-rt/ic/v2/vehiclePositions"
+        return self.__feedsetup(url)
+
+    """
+        Executes the request to the stm api for trips
+        If error occured in feed setup - None is returned
+        Ensure to Check for None when calling get_trip_updates
+    """
+
+    def get_trip_updates(self):
+
+        url = "https://api.stm.info/pub/od/gtfs-rt/ic/v2/tripUpdates"
+        return self.__feedsetup(url)
