@@ -1,19 +1,18 @@
-from ..libraries.distance import calculate_distance
-from ..libraries.stm_api import StmApi
-from google.cloud import secretmanager
 import pandas as pd
-import json
+from ..libraries.distance import calculate_distance
+from ..libraries.security import Authenticator
+from ..libraries.stm_api import StmApi
 
-# Load google secrets
-secret_client = secretmanager.SecretManagerServiceClient()
-secret_request = {"name": f"projects/travel-buddy-362314/secrets/stm-secret/versions/latest"}
+authenticator = Authenticator()
+secrets = authenticator.load_secrets("stm-secret")
+stm_api = StmApi(secrets["api_key"])
 
-response = secret_client.access_secret_version(secret_request)
-secrets = response.secrets.data.decode("UTF-8")
-secrets_dict = json.loads(secrets)
 
-# initialize the stm api class
-stm_api = StmApi(secrets_dict["api_key"])
+"""
+    Post request to retrieve active buses within x radius from client
+    Requires the current latitude, longitude and radius as input
+    Returns schedules of these buses, next stops, occupancy level as dict
+"""
 
 
 def get_vehicles(request):
@@ -32,6 +31,8 @@ def get_vehicles(request):
     try:
         # fetch vehicle positions from api
         vehicles = stm_api.get_vehicle_positions()
+        if vehicles is None:
+            raise TypeError("None was returned from vehicles fetched")
 
         # iterate over each vehicle and calculate distance from the client
         for vehicle in vehicles:
