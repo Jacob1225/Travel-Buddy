@@ -2,6 +2,7 @@ import pandas as pd
 from ..libraries.distance import calculate_distance
 from ..libraries.security import Authenticator
 from ..libraries.stm_api import StmAPi
+from ..libraries.common import StopSequenceObj, TripDocument, TripsList
 
 DEFAULT_RADIUS = 2
 authenticator = Authenticator()
@@ -37,6 +38,40 @@ def get_stops(request):
         if trips is None:
             raise TypeError("None was returned from trips fetch")
 
+        # process the feed
+        for entity in trips:
+            stop_list = []
+            trips_list = []
+
+            for stop in trips.trip_update.stop_time_update:
+
+                # create the stop sequence object
+                stop_obj = StopSequenceObj.from_dict(
+                    {
+                        "stop_sequence_id": stop.stop_sequence,
+                        "stop_id": stop.stop_id,
+                        "schedule_relationship": stop.schedule_relationship,
+                        "departure_time": stop.departure.time,
+                        "arrival_time": stop.arrival.time,
+                    }
+                )
+                stop_list.append(stop_obj)
+
+            # create the trip obj
+            trip_obj = TripDocument.from_dict(
+                {
+                    "trip_id": entity.trip_update.trip.trip_id,
+                    "route_id": entity.trip_update.trip.route_id,
+                    "schedule_relationship": entity.trip_update.trip.schedule_relationship,
+                    "start_date": entity.trip_update.trip.start_date,
+                    "stop_sequence": stop_list,
+                }
+            )
+            trips_list.append(trip_obj)
+
+        TripsList.from_any(trips_list)
+
+        # Find stops that are within clients radius
         for stop in stops.itertuples():
             if calculate_distance(curr_lat, stop.stop_lat, curr_lon, stop.stop_lon) <= radius:
                 print(stop)  # for now get stop information

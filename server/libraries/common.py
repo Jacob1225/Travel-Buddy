@@ -4,7 +4,7 @@ from dacite import from_dict
 from typing import List, Dict, Optional
 
 """
-    Class the provides helper methods for dervied classes to use
+    Class that provides helper methods for dervied classes to use
 """
 
 
@@ -26,6 +26,12 @@ class BaseDocument(object):
     def from_dict(cls, obj: dict):
         return from_dict(data_class=cls, data=obj)
 
+    @classmethod
+    def from_class(cls, obj):
+        if isinstance(obj, cls):
+            return obj
+        return cls.from_dict(obj.as_dict())
+
 
 """
     Class defining the schema for a stop sequence in a trip object
@@ -34,11 +40,11 @@ class BaseDocument(object):
 
 @dataclass
 class StopSequenceObj(BaseDocument):
-    stop_sequence_id: str
+    stop_sequence_id: int
     stop_id: str
-    departure_time: Optional[datetime] = None
-    schedule_relationship: Optional[str] = None
-    arrival: Optional[datetime] = None
+    departure_time: Optional[int] = None
+    schedule_relationship: Optional[int] = None
+    arrival_time: Optional[int] = None
 
 
 """
@@ -50,9 +56,19 @@ class StopSequenceObj(BaseDocument):
 class TripDocument(BaseDocument):
     trip_id: str
     route_id: str
-    schedule_relationship: str
+    schedule_relationship: int
     start_date: str
     stop_sequence: List[StopSequenceObj]
+
+
+"""
+    Class defining a list of trip documents
+"""
+
+
+@dataclass
+class TripsList(BaseDocument):
+    trips: List[TripDocument]
 
 
 """
