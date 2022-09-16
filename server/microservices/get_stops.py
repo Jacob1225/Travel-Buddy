@@ -30,8 +30,9 @@ def get_stops(request):
         return ({"message": "missing latitude, longitude, or radius", "data": None}, 400)
 
     try:
-        # load stops.csv from cloud storage
-        stops = pd.read_csv("gs://travel-buddy/static.stops.csv")
+        # load stops.csv/trips.csv from cloud storage
+        static_stops = pd.read_csv("gs://travel-buddy/static/stops.csv")
+        static_trips = pd.read_csv("gs://travel-buddy/static/trips.csv")
 
         # Fetch trip updates
         trips = stm_api.get_trip_updates()
@@ -58,10 +59,17 @@ def get_stops(request):
                 stop_list.append(stop_obj)
 
             # create the trip obj
+            trip_headsign = static_trips[static_trips["trip_id"] == entity.trip_update.trip.trip_id].values
+            if len(trip_headsign == 0):
+                trip_headsign = ""
+            else:
+                trip_headsign = trip_headsign[0][3]
+
             trip_obj = TripDocument.from_dict(
                 {
                     "trip_id": entity.trip_update.trip.trip_id,
                     "route_id": entity.trip_update.trip.route_id,
+                    "trip_headsign": trip_headsign,
                     "schedule_relationship": entity.trip_update.trip.schedule_relationship,
                     "start_date": entity.trip_update.trip.start_date,
                     "stop_sequence": stop_list,
@@ -73,7 +81,7 @@ def get_stops(request):
 
         # Find stops that are within clients radius
         response_dict = {}
-        for stop in stops.itertuples():
+        for stop in static_stops.itertuples():
             if calculate_distance(curr_lat, stop.stop_lat, curr_lon, stop.stop_lon) <= radius:
 
                 # See if stop_id exists in trip list

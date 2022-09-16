@@ -56,6 +56,7 @@ class StopSequenceObj(BaseDocument):
 class TripDocument(BaseDocument):
     trip_id: str
     route_id: str
+    trip_headsign: str
     schedule_relationship: int
     start_date: str
     stop_sequence: List[StopSequenceObj]
