@@ -1,7 +1,7 @@
 import pandas as pd
-from ..libraries.util import calculate_distance, get_trip_list
-from ..libraries.security import Authenticator
-from ..libraries.stm_api import StmAPi
+from libraries.util import calculate_distance, get_trip_list
+from libraries.security import Authenticator
+from libraries.stm_api import StmAPi
 
 DEFAULT_RADIUS = 2
 authenticator = Authenticator()

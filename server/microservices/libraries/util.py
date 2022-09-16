@@ -1,6 +1,6 @@
 from math import sin, cos, sqrt, atan2, radians
 from typing import List
-from ..libraries.common import StopSequenceObj, TripDocument, TripsList
+from libraries.common import StopSequenceObj, TripDocument, TripsList
 
 
 """
