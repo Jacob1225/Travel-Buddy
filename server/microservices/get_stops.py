@@ -27,7 +27,7 @@ def get_stops(request):
     radius = payload.get("radius")
 
     if not curr_lat or not curr_lon or not radius:
-        return ("missing latitude, longitude, or radius", 400)
+        return ({"message": "missing latitude, longitude, or radius", "data": None}, 400)
 
     try:
         # load stops.csv from cloud storage
@@ -72,13 +72,23 @@ def get_stops(request):
         TripsList.from_any(trips_list)
 
         # Find stops that are within clients radius
+        response_dict = {}
         for stop in stops.itertuples():
             if calculate_distance(curr_lat, stop.stop_lat, curr_lon, stop.stop_lon) <= radius:
-                print(stop)  # for now get stop information
 
-        return ("stops retrieved", 200)
+                # See if stop_id exists in trip list
+                filtered_trips = list(
+                    filter(
+                        lambda trip: stop.stop_id
+                        in [value for elem in trip.stop_sequence for value in elem.as_dict().values()],
+                        trips_list,
+                    )
+                )
+                response_dict[stop.stop_id] = filtered_trips
+
+        return ({"message": "stops retrieved", "data": response_dict}, 200)
 
     # TODO change exception when testing and new exceptions are known
     except Exception as e:
         print(str(e))
-        return ("Error retriveing stops", 500)
+        return ({"message": "Error retriveing stops", "data": None}, 500)
