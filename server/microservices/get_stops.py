@@ -1,8 +1,7 @@
 import pandas as pd
-from ..libraries.distance import calculate_distance
+from ..libraries.util import calculate_distance, get_trip_list
 from ..libraries.security import Authenticator
 from ..libraries.stm_api import StmAPi
-from ..libraries.common import StopSequenceObj, TripDocument, TripsList
 
 DEFAULT_RADIUS = 2
 authenticator = Authenticator()
@@ -39,45 +38,7 @@ def get_stops(request):
         if trips is None:
             raise TypeError("None was returned from trips fetch")
 
-        # process the feed
-        for entity in trips:
-            stop_list = []
-            trips_list = []
-
-            for stop in trips.trip_update.stop_time_update:
-
-                # create the stop sequence object
-                stop_obj = StopSequenceObj.from_dict(
-                    {
-                        "stop_sequence_id": stop.stop_sequence,
-                        "stop_id": stop.stop_id,
-                        "schedule_relationship": stop.schedule_relationship,
-                        "departure_time": stop.departure.time,
-                        "arrival_time": stop.arrival.time,
-                    }
-                )
-                stop_list.append(stop_obj)
-
-            # create the trip obj
-            trip_headsign = static_trips[static_trips["trip_id"] == entity.trip_update.trip.trip_id].values
-            if len(trip_headsign == 0):
-                trip_headsign = ""
-            else:
-                trip_headsign = trip_headsign[0][3]
-
-            trip_obj = TripDocument.from_dict(
-                {
-                    "trip_id": entity.trip_update.trip.trip_id,
-                    "route_id": entity.trip_update.trip.route_id,
-                    "trip_headsign": trip_headsign,
-                    "schedule_relationship": entity.trip_update.trip.schedule_relationship,
-                    "start_date": entity.trip_update.trip.start_date,
-                    "stop_sequence": stop_list,
-                }
-            )
-            trips_list.append(trip_obj)
-
-        TripsList.from_any(trips_list)
+        trips_list = get_trip_list(trips, static_trips)
 
         # Find stops that are within clients radius
         response_dict = {}
