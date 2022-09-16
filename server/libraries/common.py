@@ -1,7 +1,6 @@
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from dacite import from_dict
-from typing import List, Dict, Optional
+from typing import List, Optional
 
 """
     Class that provides helper methods for dervied classes to use
@@ -80,7 +79,7 @@ class TripsList(BaseDocument):
 @dataclass
 class VehiclePosition(BaseDocument):
     vehicle_id: str
-    trip_id: str
+    trip: List
     start_time: str
     start_date: str
     route_id: str
