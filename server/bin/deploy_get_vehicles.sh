@@ -1,1 +1,0 @@
-bash ./bin/deploy.sh --source=./microservices --config=./cloud_build/get_vehicles.yaml --file=get_vehicles --requirements=requirements.txt
