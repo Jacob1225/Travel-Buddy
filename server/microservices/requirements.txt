@@ -2,6 +2,7 @@ gcsfs
 pandas
 dacite
 requests
+cryptography
 protobuf==3.20.*
 gtfs-realtime-bindings
 google-cloud-secret-manager
