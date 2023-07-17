@@ -1,27 +1,24 @@
 import Spline from '@splinetool/react-spline';
+import { useSelector, useDispatch } from 'react-redux';
+import { UserState, loginUser } from '../features/user'; 
 import { useGoogleOneTapLogin } from 'react-google-one-tap-login';
-import { useSelector } from 'react-redux';
-import { UserState } from '../features/user';
 
-let clientID: string;
+let clientID: string = String(process.env.REACT_APP_CLIENT_ID);
 
-clientID = String(process.env.REACT_APP_CLIENT_ID);
-
-//Define Google button configuration type
-type GsiButtonConfiguration = {
-    client_id: string,
-    auto_select: string,
-    cancel_on_tap_outside: string
-}
 export default function Home() {
-    const user = useSelector((state: any) => state.user.value)
+    //const dispatch = useDispatch();
+
     useGoogleOneTapLogin({
-        onError: error => console.log(error),
-        onSuccess: response => console.log(response),
-        googleAccountConfigs: {
-          client_id: clientID
+        onSuccess: response => {
+            loginUser({name: response.name, email: response.email, given_name: response.given_name, isLogged: true})
         },
-      });
+        onError: error => console.log(error), //TODO: add notification that it did not work
+        googleAccountConfigs: {
+            client_id: clientID
+        },
+    }); 
+
+    //const user = useSelector()
 
     return (
         <Spline scene="https://prod.spline.design/FxfNdLxC2I8o3LF1/scene.splinecode"

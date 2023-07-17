@@ -3,10 +3,13 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { configureStore } from '@reduxjs/toolkit';
+import userReducer from './features/user';
 import { Provider } from 'react-redux';
 
 const store = configureStore({
-  reducer: {},
+  reducer: {
+    user: userReducer,
+  },
 })
 
 const rootElement = document.getElementById('root')!;

@@ -19,7 +19,10 @@ const userSlice = createSlice({
     reducers: {
         loginUser(state, action: PayloadAction<UserState["value"]>) {
             state.value = action.payload;
-        }
+        },
+        logoutUser(state: any) {
+            state.value = initialState;
+        },
     }
 })
 
