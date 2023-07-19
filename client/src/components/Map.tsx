@@ -8,7 +8,6 @@ export default function Map() {
     const navigate = useNavigate();
 
     useEffect(() => {
-
         if (!user.isLogged) {
             navigate("/");
         }
