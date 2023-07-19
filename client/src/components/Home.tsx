@@ -1,10 +1,16 @@
 import Spline from '@splinetool/react-spline';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { UserState, loginUser } from '../features/user'; 
+import { useCookies } from 'react-cookie'
+import { loginUser } from '../features/user'; 
 import { useGoogleOneTapLogin } from 'react-google-one-tap-login';
 
 let clientID: string = String(process.env.REACT_APP_CLIENT_ID);
+const setCookie: any = useCookies(['credentials']);
+
+const callback = (response: any) => {
+    setCookie('credentials', response.credential, { path: '/'});
+}
 
 export default function Home() {
     const dispatch = useDispatch(); 
@@ -12,12 +18,15 @@ export default function Home() {
 
     useGoogleOneTapLogin({
         onSuccess: response => {
-            dispatch(loginUser({name: response.name, email: response.email, given_name: response.given_name, isLogged: true}));
+            console.log(response);
+            dispatch(loginUser({name: response.name, email: response.email,
+                given_name: response.given_name, isLogged: true}));
             navigate("/map");
         },
         onError: error => console.log(error), //TODO: add notification that it did not work
         googleAccountConfigs: {
-            client_id: clientID
+            client_id: clientID,
+            callback: callback
         },
     }); 
 
