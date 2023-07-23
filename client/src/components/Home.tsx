@@ -1,8 +1,8 @@
 import Spline from '@splinetool/react-spline';
+import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useCookies } from 'react-cookie'
-import { loginUser } from '../features/user'; 
+import { loginUser} from '../reducers/user'; 
 import { useGoogleOneTapLogin } from 'react-google-one-tap-login';
 import jwt_decode from "jwt-decode";
 
@@ -15,46 +15,36 @@ interface Credentials {
     credential: string,
     user: string
 }
+
 /* TODO: 
-    - Add logout + remove cookie
-    - If cookie credential set - move to the map
-    - If one tap login does not show up - call it on click of button
-    - Add notifications for errors on login or cookie being set.
+    - Add logout + remove cookie + remove g_state
 */
-export default function Home({notify}: any) {
+export default function Home({notify, cookies, setCookie, removeCookie}: any) {
     const dispatch = useDispatch(); 
     let navigate = useNavigate();
-    const [cookies, setCookie] = useCookies(['credentials']);
 
-
+    useEffect(() => {
+        if ('credentials' in cookies) {
+            const token: any = jwt_decode(cookies.credentials);
+            dispatch(loginUser({name: token.name, email: token.email,
+                given_name: token.given_name, isLogged: true}));
+            notify(`🦄 Welcome back!`) //TODO: find user name in state
+            navigate('map')
+        }
+        else if ('g_state' in cookies) {removeCookie('g_state', {path: '/'}) 
+        console.log('s')};
+    })
+    
     const callback = (response: Credentials) => {
         if (response && 'credential' in response){
             const token: any = jwt_decode(response.credential);
             setCookie('credentials', response.credential, { path: '/'});
             dispatch(loginUser({name: token.name, email: token.email,
                 given_name: token.given_name, isLogged: true}));
-                notify(`🦄 Welcome ${token.name}!`, {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    })
+                notify(`🦄 Welcome ${token.name}!`)
             navigate('/map');
         } else {
-            notify.error('Login Error!', {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
+            notify.error('Login Error!');
         }
     }
     
@@ -67,9 +57,6 @@ export default function Home({notify}: any) {
     }); 
 
     return (
-        <Spline scene="https://prod.spline.design/FxfNdLxC2I8o3LF1/scene.splinecode"
-            //onMouseDown={onMouseDown}
-        />
-
-  );
+        <Spline scene="https://prod.spline.design/FxfNdLxC2I8o3LF1/scene.splinecode"/>
+    );
 }

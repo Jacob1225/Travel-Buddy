@@ -1,15 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface UserState {
-    value: { name: string, email: string, given_name: string, isLogged: boolean };
+export interface UserState { 
+    name: string,
+    email: string,
+    given_name: string,
+    isLogged: boolean;
 }
 
-const initialState = { value: {
+const initialState = {
     name: "",
     email: "",
     given_name: "",
     isLogged: false,
-}} as UserState 
+} as UserState 
 
 /*reducers are the functions that allow the state to be updated*/
 
@@ -17,11 +20,12 @@ const userSlice = createSlice({
     name: "user",
     initialState,
     reducers: {
-        loginUser(state, action: PayloadAction<UserState['value']>) {
-            state.value = action.payload;
+        loginUser(state: any, action: PayloadAction<UserState>) {
+            return {...state, email: action.payload.email, name: action.payload.name, given_name: action.payload.given_name, isLogged: action.payload.isLogged}
         },
         logoutUser(state: any) {
-            state.value = initialState;
+            state = initialState;
+
         },
     }
 })

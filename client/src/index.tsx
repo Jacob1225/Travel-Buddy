@@ -1,23 +1,39 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { configureStore } from '@reduxjs/toolkit';
+import { PersistGate } from 'redux-persist/integration/react';
+import { persistStore, 
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER
+} from 'redux-persist'
+import persistedReducer from './store';
+import { Provider } from 'react-redux';
 import './index.css';
 import App from './App';
-import { configureStore } from '@reduxjs/toolkit';
-import userReducer from './features/user';
-import { Provider } from 'react-redux';
 
-const store = configureStore({
-  reducer: {
-    user: userReducer,
-  },
-})
+  const store: any = configureStore({
+    reducer:persistedReducer,
+    middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
+  });
+  const persistor: any= persistStore(store);
 
 const rootElement = document.getElementById('root')!;
 const root = createRoot(rootElement);
 root.render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+    <PersistGate loading={null} persistor={persistor}>
+        <App />
+    </PersistGate>
     </Provider>
   </StrictMode>
 );
