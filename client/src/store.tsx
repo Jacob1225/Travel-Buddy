@@ -1,4 +1,5 @@
 import userReducer from './reducers/user';
+import mapReducer from './reducers/map';
 import { combineReducers } from 'redux';
 import { persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
@@ -11,7 +12,8 @@ const persistConfig: any = {
   };
 
 const rootReducer = combineReducers({
-    user: userReducer
+    user: userReducer,
+    map: mapReducer
 })
 const persistedReducer = persistReducer(persistConfig, rootReducer);
   

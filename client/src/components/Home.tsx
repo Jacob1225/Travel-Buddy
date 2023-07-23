@@ -1,6 +1,5 @@
 import Spline from '@splinetool/react-spline';
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { loginUser} from '../reducers/user'; 
 import { useGoogleOneTapLogin } from 'react-google-one-tap-login';
@@ -19,9 +18,8 @@ interface Credentials {
 /* TODO: 
     - Add logout + remove cookie + remove g_state
 */
-export default function Home({notify, cookies, setCookie, removeCookie}: any) {
-    const dispatch = useDispatch(); 
-    let navigate = useNavigate();
+export default function Home({notify, cookies, setCookie, removeCookie, dispatch }: any) {
+    const navigate = useNavigate();
 
     useEffect(() => {
         if ('credentials' in cookies) {
