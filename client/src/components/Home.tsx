@@ -29,8 +29,7 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
             notify(`🦄 Welcome back!`) //TODO: find user name in state
             navigate('map')
         }
-        else if ('g_state' in cookies) {removeCookie('g_state', {path: '/'}) 
-        console.log('s')};
+        else if ('g_state' in cookies) {removeCookie('g_state', {path: '/'}) };
     })
     
     const callback = (response: Credentials) => {

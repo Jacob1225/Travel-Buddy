@@ -1,14 +1,18 @@
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux'; 
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useJsApiLoader } from '@react-google-maps/api';
+import { getMemoizedMap } from '../reducers/map';
+import { useJsApiLoader, GoogleMap } from '@react-google-maps/api';
 import { setCurrentLocation } from '../reducers/map';
 
 let mapsKey: string = String(process.env.REACT_APP_GOOGLE_MAPS_API);
 
+
+//const [user, map] = useSelector((state: any) => [state.user, state.map]);
+
 export default function Map({cookies, dispatch }: any) {
-    const user = useSelector((state: any) => state.user);
     const navigate = useNavigate();
+    let mapState = useSelector(getMemoizedMap);
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: mapsKey
@@ -26,6 +30,7 @@ export default function Map({cookies, dispatch }: any) {
     const locationError = (error: any) => {
         console.log('Cannot get user location ', error);
     } 
+
     if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
     }
@@ -36,7 +41,18 @@ export default function Map({cookies, dispatch }: any) {
         }
     })
 
+    if(!isLoaded) {
+        //add spinner
+        return <h1>Hi</h1>
+    }
+
     return(
-        <h1>Map for {user.given_name}</h1>
+        
+        <GoogleMap
+            center={{lat: mapState.currentLatitude, lng: mapState.currentLongitude}}
+            zoom={15}
+            mapContainerStyle={{width: '100%', height: '100%'}}
+        >
+        </GoogleMap>
     )
 }

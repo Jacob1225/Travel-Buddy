@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSelector } from 'reselect';
 
 export interface MapState { 
     currentLongitude: string,
@@ -38,6 +39,13 @@ const mapSlice = createSlice({
 
 export const { setCurrentLocation } = mapSlice.actions;
 export default mapSlice.reducer;
+
+export const getMemoizedMap = createSelector(
+    (state: any) => state.map,
+    (map: any) => {
+        return map;
+    }  
+)
 
 
 

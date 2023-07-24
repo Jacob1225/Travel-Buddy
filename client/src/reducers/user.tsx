@@ -1,4 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { create } from 'domain';
+import { createSelector } from 'reselect';
 
 export interface UserState { 
     name: string,
@@ -32,3 +34,10 @@ const userSlice = createSlice({
 
 export const { loginUser } = userSlice.actions;
 export default userSlice.reducer;
+
+export const getMemoizedUser = createSelector(
+    (state: any) => state.user,
+    (user) => {
+        return user
+    }
+)
