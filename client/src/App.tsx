@@ -37,8 +37,8 @@ export default function App() {
             dispatch={dispatch}
           /> }/>
         </Routes>
-        </Router>
-        <ToastContainer/>
+      </Router>
+      <ToastContainer/>
       </CookiesProvider>
   );
 }

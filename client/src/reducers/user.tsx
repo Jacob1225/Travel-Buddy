@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { create } from 'domain';
 import { createSelector } from 'reselect';
 
 export interface UserState { 
