@@ -2,7 +2,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import { CSSProperties } from "react";
 
 
-export default function Spinner({color, loading}: any) {
+export default function Spinner({color, loading}: {color: string, loading: boolean}) {
     
     const override: CSSProperties = {
         display: "block",
