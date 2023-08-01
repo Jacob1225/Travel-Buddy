@@ -15,10 +15,8 @@ class BaseDocument(object):
 
     @classmethod
     def from_any(cls, obj):
-
         if isinstance(obj, dict):
             return cls.from_dict(obj)
-
         return cls.from_class(obj)
 
     @classmethod
@@ -39,10 +37,10 @@ class BaseDocument(object):
 
 @dataclass
 class StopSequenceObj(BaseDocument):
-    stop_sequence_id: int
+    stop_sequence_id: str
     stop_id: str
     departure_time: Optional[int] = None
-    schedule_relationship: Optional[int] = None
+    schedule_relationship: Optional[str] = None
     arrival_time: Optional[int] = None
 
 
@@ -56,20 +54,9 @@ class TripDocument(BaseDocument):
     trip_id: str
     route_id: str
     trip_headsign: str
-    schedule_relationship: int
+    schedule_relationship: str
     start_date: str
     stop_sequence: List[StopSequenceObj]
-
-
-"""
-    Class defining a list of trip documents
-"""
-
-
-@dataclass
-class TripsList(BaseDocument):
-    trips: List[TripDocument]
-
 
 """
     Class defining the schema for a vehicle position object
@@ -86,7 +73,7 @@ class VehiclePosition(BaseDocument):
     latitude: float
     longitude: float
     speed: float
-    current_stop_sequence_id: int
+    current_stop_sequence: str
     current_status: str
     occupancy_status: str
     current_stop_id: Optional[str] = None

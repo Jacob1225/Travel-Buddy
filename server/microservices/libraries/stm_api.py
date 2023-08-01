@@ -26,8 +26,7 @@ class StmAPi:
 
         # TODO make sure to catch more specific exceptions if need to handle differently
         except Exception as e:
-            print(str(e))
-            return None
+            print(e)
 
     """
         Endpoint to retrieve the vehicle positions from api

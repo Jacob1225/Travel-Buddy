@@ -19,15 +19,12 @@ class StmAPi:
 
             response = Request(url)
             response.add_header("apiKey", self.api_key)
-
             feed.ParseFromString(urlopen(response).read())
-
             return feed.entity
 
         # TODO make sure to catch more specific exceptions if need to handle differently
         except Exception as e:
-            print(str(e))
-            return None
+            print(e)
 
     """
         Endpoint to retrieve the vehicle positions from api

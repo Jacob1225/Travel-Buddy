@@ -1,6 +1,6 @@
 from math import sin, cos, sqrt, atan2, radians
 from typing import List
-from ..libraries.common import StopSequenceObj, TripDocument, TripsList
+from libraries.common import StopSequenceObj, TripDocument
 
 
 """
@@ -8,7 +8,12 @@ from ..libraries.common import StopSequenceObj, TripDocument, TripsList
 """
 
 
-def calculate_distance(lat1: int, lat2: int, lon1: int, lon2: int) -> int:
+def calculate_distance(lat1: float, lat2: float, lon1: float, lon2: float) -> float:
+    
+    lat1 = float(lat1)
+    lat2 = float(lat2)
+    lon1 = float(lon1) 
+    lon2 = float(lon2)
 
     # radius of the earth in km
     R = 6373.0
@@ -29,7 +34,6 @@ def calculate_distance(lat1: int, lat2: int, lon1: int, lon2: int) -> int:
 
     return distance
 
-
 """
     Creates a trip list document
     Useful to retrieve trip information from a trip_id
@@ -38,43 +42,45 @@ def calculate_distance(lat1: int, lat2: int, lon1: int, lon2: int) -> int:
 
 
 def get_trip_list(trips, static_trips) -> List:
+    trips_list = []
+
     # process the feed
     for entity in trips:
         stop_list = []
-        trips_list = []
+        
+        if entity.HasField('trip_update'):
+            for stop in entity.trip_update.stop_time_update:
+                if stop.HasField('stop_sequence'):
+                    # create the stop sequence object
+                    stop_obj = StopSequenceObj.from_dict(
+                        {
+                            "stop_sequence_id": str(stop.stop_sequence),
+                            "stop_id": stop.stop_id,
+                            "schedule_relationship": str(stop.schedule_relationship),
+                            "departure_time": stop.departure.time,
+                            "arrival_time": stop.arrival.time,
+                        }
+                    )
+                    stop_list.append(stop_obj)
 
-        for stop in trips.trip_update.stop_time_update:
+            # create the trip obj
+            trip_headsign = static_trips[static_trips["trip_id"] == entity.trip_update.trip.trip_id].values
+        
+            if not trip_headsign:
+                trip_headsign = ""
+            else:
+                trip_headsign = trip_headsign[0][3]
 
-            # create the stop sequence object
-            stop_obj = StopSequenceObj.from_dict(
+            trip_obj = TripDocument.from_dict(
                 {
-                    "stop_sequence_id": stop.stop_sequence,
-                    "stop_id": stop.stop_id,
-                    "schedule_relationship": stop.schedule_relationship,
-                    "departure_time": stop.departure.time,
-                    "arrival_time": stop.arrival.time,
+                    "trip_id": entity.trip_update.trip.trip_id,
+                    "route_id": entity.trip_update.trip.route_id,
+                    "trip_headsign": trip_headsign,
+                    "schedule_relationship": str(entity.trip_update.trip.schedule_relationship),
+                    "start_date": entity.trip_update.trip.start_date,
+                    "stop_sequence": stop_list,
                 }
             )
-            stop_list.append(stop_obj)
+            trips_list.append(trip_obj)
 
-        # create the trip obj
-        trip_headsign = static_trips[static_trips["trip_id"] == entity.trip_update.trip.trip_id].values
-        if len(trip_headsign == 0):
-            trip_headsign = ""
-        else:
-            trip_headsign = trip_headsign[0][3]
-
-        trip_obj = TripDocument.from_dict(
-            {
-                "trip_id": entity.trip_update.trip.trip_id,
-                "route_id": entity.trip_update.trip.route_id,
-                "trip_headsign": trip_headsign,
-                "schedule_relationship": entity.trip_update.trip.schedule_relationship,
-                "start_date": entity.trip_update.trip.start_date,
-                "stop_sequence": stop_list,
-            }
-        )
-        trips_list.append(trip_obj)
-        TripsList.from_any(trips_list)  # validate list is properly created
-
-        return trips_list
+    return trips_list

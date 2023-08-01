@@ -1,4 +1,5 @@
 import pandas as pd
+import traceback
 from libraries.util import calculate_distance, get_trip_list
 from libraries.security import Authenticator
 from libraries.stm_api import StmAPi
@@ -17,7 +18,6 @@ stm_api = StmAPi(secrets["api_key"])
 
 
 def get_vehicles(request):
-
     # TODO: add token authentication
 
     payload = request.get_json()
@@ -27,7 +27,7 @@ def get_vehicles(request):
     radius = payload.get("radius")
 
     if not curr_lat or not curr_lon or not radius:
-        return ({"message": "missing latitude, longitude, or radius", "data": None}, 200)
+        return ({"message": "missing latitude, longitude, or radius", "data": None}, 400)
 
     try:
         # load trips.csv from cloud storage
@@ -35,12 +35,12 @@ def get_vehicles(request):
 
         # fetch vehicle positions from api
         vehicles = stm_api.get_vehicle_positions()
-        if vehicles is None:
-            raise TypeError("None was returned from vehicles fetched")
+        if not vehicles:
+            raise TypeError("Stm api did not fetch any vehicles")
 
         trips = stm_api.get_trip_updates()
-        if trips is None:
-            raise TypeError("None was returned from trips fetch")
+        if not trips:
+            raise TypeError("stm api did not fetch any trips")
 
         # Fetch the trip list
         trips_list = get_trip_list(trips, static_trips)
@@ -52,7 +52,7 @@ def get_vehicles(request):
             vehicle_lat = vehicle.vehicle.position.latitude
             vehicle_lon = vehicle.vehicle.position.longitude
 
-            if calculate_distance(curr_lat, vehicle_lat, curr_lon, vehicle_lon) <= radius:
+            if calculate_distance(curr_lat, vehicle_lat, curr_lon, vehicle_lon) <= float(radius):
                 # create vehiclePositionDocument
                 trip_obj = list(filter(lambda trip: vehicle.vehicle.trip.trip_id == trip.trip_id, trips_list))
 
@@ -66,9 +66,9 @@ def get_vehicles(request):
                         "latitude": vehicle.vehicle.position.latitude,
                         "longitude": vehicle.vehicle.position.longitude,
                         "speed": vehicle.vehicle.position.speed,
-                        "current_stop_sequence": vehicle.vehicle.current_stop_sequence,
-                        "current_status": vehicle.vehicle.current_status,
-                        "occupancy_status": vehicle.vehicle.occupancy_status,
+                        "current_stop_sequence": str(vehicle.vehicle.current_stop_sequence),
+                        "current_status": str(vehicle.vehicle.current_status),
+                        "occupancy_status": str(vehicle.vehicle.occupancy_status),
                     }
                 )
                 response_dict[vehicle.id] = vehicle_obj.as_dict()
@@ -77,5 +77,5 @@ def get_vehicles(request):
 
     # TODO change exception when testing and new exceptions are known
     except Exception as e:
-        print(str(e))
-        return ({"message": "Error retriveing vehicles", "data": None}, 500)
+        traceback.print_exc()
+        return ({"message": f"Error retriveing vehicles {e}", "data": None}, 500)

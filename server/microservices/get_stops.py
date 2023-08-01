@@ -1,4 +1,5 @@
 import pandas as pd
+import traceback
 from libraries.util import calculate_distance, get_trip_list
 from libraries.security import Authenticator
 from libraries.stm_api import StmAPi
@@ -16,48 +17,32 @@ stm_api = StmAPi(secrets["api_key"])
 
 
 def get_stops(request):
-
     # TODO: add token authentication
-
+    print('starting...')
     payload = request.get_json()
 
-    curr_lat = payload.get("lat")
-    curr_lon = payload.get("lon")
-    radius = payload.get("radius")
-
-    if not curr_lat or not curr_lon or not radius:
-        return ({"message": "missing latitude, longitude, or radius", "data": None}, 400)
-
     try:
-        # load stops.csv/trips.csv from cloud storage
-        static_stops = pd.read_csv("gs://travel-buddy/static/stops.csv")
-        static_trips = pd.read_csv("gs://travel-buddy/static/trips.csv")
+        stops = []
+        # load stop_schedule.csv as dataframe from cloud storage
+        static_stops = pd.read_csv("gs://travel-buddy/static/filtered_stops_1.csv")
 
-        # Fetch trip updates
-        trips = stm_api.get_trip_updates()
-        if trips is None:
-            raise TypeError("None was returned from trips fetch")
-
-        trips_list = get_trip_list(trips, static_trips)
-
-        # Find stops that are within clients radius
-        response_dict = {}
         for stop in static_stops.itertuples():
-            if calculate_distance(curr_lat, stop.stop_lat, curr_lon, stop.stop_lon) <= radius:
-
-                # See if stop_id exists in trip list
-                filtered_trips = list(
-                    filter(
-                        lambda trip: stop.stop_id
-                        in [value for elem in trip.stop_sequence for value in elem.as_dict().values()],
-                        trips_list,
-                    )
-                )
-                response_dict[stop.stop_id] = filtered_trips
-
-        return ({"message": "stops retrieved", "data": response_dict}, 200)
+            stops.append(
+                {
+                    "stop_id": stop.stop_id,
+                    "route_id": stop.route_id,
+                    "trip_headsign": stop.trip_headsign,
+                    "arrival_time": stop.arrival_time,
+                    "route_short_name": stop.route_short_name,
+                    "route_long_name": stop.route_long_name,
+                    "route_type": stop.route_type
+                }
+            )
+        
+        return ({"message": "stop schedule retrieved", "data": stops}, 200)
 
     # TODO change exception when testing and new exceptions are known
     except Exception as e:
-        print(str(e))
-        return ({"message": "Error retriveing stops", "data": None}, 500)
+        traceback.print_exc()
+        print(e)
+        return ({"message": f"Error retriveing stops: {e}", "data": None}, 500)
