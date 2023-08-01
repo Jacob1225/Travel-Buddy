@@ -3,4 +3,5 @@ build
 environments
 cloud_build
 bin
-.json
+*.json
+__pycache__
