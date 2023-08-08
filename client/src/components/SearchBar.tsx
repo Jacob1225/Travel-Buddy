@@ -30,7 +30,6 @@ import { getMemoizedMap } from '../reducers/map';
                     </VStack>
                 </Flex>
                 <Flex p={2} flexDirection="column">
-                    
                     <Button isLoading={routeLoading} loadingText='calculating'leftIcon={<LuClock10/>} type="submit" mb={5} colorScheme="pink" variant="outline" >
                         <Text>Calculate</Text>
                     </Button>

@@ -2,6 +2,12 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { createSelector } from 'reselect';
 
+export interface requestData {
+    lat: string,
+    lon: string,
+    radius: string
+}
+
 export interface MapState { 
     currentLongitude: string,
     currentLatitude: string,
@@ -9,7 +15,8 @@ export interface MapState {
     originLongitude: string,
     destinationLongitude: string,
     destinationLatitude: string,
-    routeLoading: boolean
+    routeLoading: boolean,
+    static_stops: any[]
 }
 
 const initialState = {
@@ -19,17 +26,20 @@ const initialState = {
     originLongitude: "",
     destinationLongitude: "",
     destinationLatitude: "",
-    routeLoading: false
+    routeLoading: false,
+    static_stops: []
 } as MapState
 
 /* Fetch data async */
-const getRoute = createAsyncThunk(
+export const getStops =  createAsyncThunk(
     'map/getRoute',
     async(data, thunkApi) => {
         try{
-            const res = await axios.get('url', )
+            const res = await axios.post(`${process.env.REACT_APP_DEV_URL}`, {})
+            console.log(res)
             return res.data
         } catch(error: any) {
+            console.log(error.message)
             return thunkApi.rejectWithValue(error.message);
         }
     }
@@ -73,15 +83,16 @@ const mapSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        builder.addCase(getRoute.pending, (state: MapState) => {
+        builder.addCase(getStops.pending, (state: MapState) => {
             state.routeLoading = true;
         })
-        builder.addCase(getRoute.fulfilled, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getStops.fulfilled, (state: MapState, action: PayloadAction<any>) => {
             state.routeLoading = false;
-            //update state with data .. 
+            state.static_stops = action.payload.data
         })
-        builder.addCase(getRoute.rejected, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getStops.rejected, (state: MapState, action: PayloadAction<any>) => {
             state.routeLoading = false;
+
             //TODO: add error message in state to notify front end 
         })
     },
