@@ -7,6 +7,7 @@ import Map from './components/Map';
 import { ChakraProvider } from '@chakra-ui/react'
 import 'react-toastify/dist/ReactToastify.css';
 import SearchBar from './components/SearchBar';
+import OptionsMenu from './components/OptionsMenu';
 
 export default function App() {
   const [cookies, setCookie, removeCookie] = useCookies(['credentials', 'g_state']);
@@ -42,6 +43,8 @@ export default function App() {
           <Route path="/test" element={ <SearchBar 
             routeLoading={false}
           /> }/>
+          {/* <Route path="/options" element={ <OptionsMenu
+          /> }/> */}
         </Routes>
       </Router>
       <ToastContainer/>
