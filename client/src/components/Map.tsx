@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Box, Heading, Stack, Flex } from '@chakra-ui/react'
+import { Box, Heading, Stack, Flex, Input } from '@chakra-ui/react'
 import { getMemoizedMap, setCurrentLocation, getStops } from '../reducers/map';
-import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow } from '@react-google-maps/api';
+import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, Autocomplete } from '@react-google-maps/api';
 import Spinner from './Spinner';
 import SearchBar from './SearchBar';
 import OptionsMenu from './OptionsMenu';
 
 let mapsKey: string = String(process.env.REACT_APP_GOOGLE_MAPS_API);
+const libraries: any = ["places"];
 
 export default function Map({cookies, dispatch }: {cookies: any, dispatch: any}) { //TODO: maybe type the props? 
+    const { isLoaded } = useJsApiLoader({
+        googleMapsApiKey: mapsKey,
+        libraries
+    })
+    
     //map & marker & visibility state
     const [map, setMap] = useState(null)
     const [activeMarker, setActiveMarker] = useState(null);
@@ -68,11 +74,7 @@ export default function Map({cookies, dispatch }: {cookies: any, dispatch: any})
         if (mapState && mapState.static_stops.length === 0) {
             dispatch(getStops()) 
         }
-    }, [dispatch])
-
-    const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: mapsKey
-    })
+    }, [dispatch, cookies.credentials])
 
     return(
         <Flex 
@@ -119,12 +121,11 @@ export default function Map({cookies, dispatch }: {cookies: any, dispatch: any})
                                 ) : null}
                             </MarkerF>)
                         })}
-                    
                     </GoogleMap>
                 :
                     <Spinner color={"white"} loading={true}/>}
             </Box>
-            <SearchBar routeLoading={false} />
+                <SearchBar routeLoading={false} isLoaded={isLoaded} />
             <OptionsMenu 
                 clickCenterMap={clickCenterMap}
                 hideStops={hideStops}

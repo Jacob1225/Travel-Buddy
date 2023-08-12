@@ -40,11 +40,6 @@ export default function App() {
             cookies={cookies}
             dispatch={dispatch}
           /> }/>
-          <Route path="/test" element={ <SearchBar 
-            routeLoading={false}
-          /> }/>
-          {/* <Route path="/options" element={ <OptionsMenu
-          /> }/> */}
         </Routes>
       </Router>
       <ToastContainer/>
