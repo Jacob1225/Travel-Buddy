@@ -1,11 +1,12 @@
 import {Box, Button, Flex, VStack, Input, Text } from '@chakra-ui/react'
+import { Autocomplete } from '@react-google-maps/api';
 import { LuClock10 } from "react-icons/lu";
 import { TbRotateClockwise } from "react-icons/tb"
 import { useSelector } from 'react-redux';
 import { getMemoizedMap } from '../reducers/map';
 
 
-  export default function SearchBar({routeLoading}: {routeLoading: boolean}) {
+  export default function SearchBar({routeLoading, isLoaded}: {routeLoading: boolean, isLoaded: any}) {
 
     const map = useSelector(getMemoizedMap);
         return (
@@ -18,14 +19,23 @@ import { getMemoizedMap } from '../reducers/map';
             minW='container.md'
             zIndex='1'
             overflow='hidden'>
+            {isLoaded &&
             <Flex justifyContent="space-between" alignItems="center">
                 <Flex justifyContent="space-evenly" w="75%">
                     <VStack p={2} w="100%">
-                        <Input placeholder='Origin' mt={2} mb={2}></Input>
+                        <Box w='100%'>
+                            <Autocomplete>
+                                <Input placeholder='Origin'></Input>
+                            </Autocomplete>
+                        </Box>
                         <Text marginRight="auto" marginLeft="0">Route Distance:</Text>
                     </VStack>
                     <VStack p={2} w="100%">
-                        <Input placeholder='Destination' mt={2} mb={2}></Input>
+                        <Box w='100%'>
+                            <Autocomplete>
+                                <Input placeholder='Destination'></Input>
+                            </Autocomplete>
+                        </Box>
                         <Text marginRight="auto" marginLeft="0">ETA: </Text>
                     </VStack>
                 </Flex>
@@ -37,7 +47,7 @@ import { getMemoizedMap } from '../reducers/map';
                         <Text>Clear Route</Text>
                     </Button>
                 </Flex>
-            </Flex>
+            </Flex>}
         </Box>
     )
 }
