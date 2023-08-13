@@ -11,22 +11,26 @@ export interface requestData {
 export interface MapState { 
     currentLongitude: string,
     currentLatitude: string,
+    originAddress: string,
     originLatitude: string,
     originLongitude: string,
+    destinationAddress: string,
     destinationLongitude: string,
     destinationLatitude: string,
-    routeLoading: boolean,
+    stopsLoading: boolean,
     static_stops: any[]
 }
 
 const initialState = {
     currentLongitude: "",
     currentLatitude: "",
+    originAddress: "",
     originLatitude: "",
     originLongitude: "",
+    destinationAddress: "",
     destinationLongitude: "",
     destinationLatitude: "",
-    routeLoading: false,
+    stopsLoading: false,
     static_stops: []
 } as MapState
 
@@ -56,27 +60,24 @@ const mapSlice = createSlice({
                 currentLongitude: action.payload.currentLongitude,
             }
         },
-        setRoute(state: any, action: PayloadAction<MapState>){
+        setRoute(state: any, action: PayloadAction<any>){
             return {
                 ...state,
+                originAddress: action.payload.originAddress,
                 originLatitude: action.payload.originLatitude,
                 originLongitude: action.payload.originLongitude,
+                destinationAddress: action.payload.destinationAddress,
                 destinationLatitude: action.payload.destinationLatitude,
                 destinationLongitude: action.payload.destinationLongitude,
-                routeLoading: true
-            }
-        },
-        setRouteLoading(state: any, action: PayloadAction<any>) {
-            return {
-                ...state,
-                routeLoading: action.payload.routeLoading
             }
         },
         clearLocation(state: any) {
             return {
                 ...state,
+                originAddress: initialState.originAddress,
                 originLatitude: initialState.originLatitude,
                 originLongitude: initialState.originLongitude,
+                destinationAddress: initialState.destinationAddress,
                 destinationLatitude: initialState.destinationLatitude,
                 destinationLongitude: initialState.destinationLongitude,
             };
@@ -84,21 +85,20 @@ const mapSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder.addCase(getStops.pending, (state: MapState) => {
-            state.routeLoading = true;
+            state.stopsLoading = true;
         })
         builder.addCase(getStops.fulfilled, (state: MapState, action: PayloadAction<any>) => {
-            state.routeLoading = false;
+            state.stopsLoading = false;
             state.static_stops = action.payload.data
         })
         builder.addCase(getStops.rejected, (state: MapState, action: PayloadAction<any>) => {
-            state.routeLoading = false;
-
+            state.stopsLoading = false;
             //TODO: add error message in state to notify front end 
         })
     },
 })
 
-export const { setCurrentLocation } = mapSlice.actions;
+export const { setCurrentLocation, setRoute, clearLocation} = mapSlice.actions;
 export default mapSlice.reducer;
 
 export const getMemoizedMap = createSelector(

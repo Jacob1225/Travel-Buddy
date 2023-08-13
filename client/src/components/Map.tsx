@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Box, Heading, Stack, Flex, Input } from '@chakra-ui/react'
+import { Box, Heading, Stack, Flex } from '@chakra-ui/react'
 import { getMemoizedMap, setCurrentLocation, getStops } from '../reducers/map';
-import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, Autocomplete } from '@react-google-maps/api';
+import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow } from '@react-google-maps/api';
 import Spinner from './Spinner';
 import SearchBar from './SearchBar';
 import OptionsMenu from './OptionsMenu';
@@ -11,7 +11,7 @@ import OptionsMenu from './OptionsMenu';
 let mapsKey: string = String(process.env.REACT_APP_GOOGLE_MAPS_API);
 const libraries: any = ["places"];
 
-export default function Map({cookies, dispatch }: {cookies: any, dispatch: any}) { //TODO: maybe type the props? 
+export default function Map({cookies, dispatch, notify }: {cookies: any, dispatch: any, notify: any}) { //TODO: maybe type the props? 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: mapsKey,
         libraries
@@ -125,7 +125,7 @@ export default function Map({cookies, dispatch }: {cookies: any, dispatch: any})
                 :
                     <Spinner color={"white"} loading={true}/>}
             </Box>
-                <SearchBar routeLoading={false} isLoaded={isLoaded} />
+                <SearchBar isLoaded={isLoaded} dispatch={dispatch} notify={notify} mapState={mapState} />
             <OptionsMenu 
                 clickCenterMap={clickCenterMap}
                 hideStops={hideStops}
