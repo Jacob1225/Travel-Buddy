@@ -1,5 +1,5 @@
 import  Geocode  from 'react-geocode';
-import {Box, Button, Flex, VStack, Input, Text } from '@chakra-ui/react'
+import {Box, Button, Flex, VStack, Input, Text, Heading, HStack } from '@chakra-ui/react'
 import { Autocomplete } from '@react-google-maps/api';
 import { LuClock10 } from "react-icons/lu";
 import { TbRotateClockwise } from "react-icons/tb"
@@ -18,7 +18,7 @@ export default function SearchBar(
 
     const originAddress = useRef<HTMLInputElement>(null);;
     const destAddress =  useRef<HTMLInputElement>(null);
-    
+
     const getCoordsFromAddress = async (address: any) => {
         try {
             const response = await Geocode.fromAddress(address);
@@ -27,6 +27,30 @@ export default function SearchBar(
         } catch(error) {
             //Maybe display more specific error
             return null
+        }
+    }
+    const milesToKm = (miles: any) => ((parseFloat(miles) * 1.609344).toFixed(2)).toString();
+
+    const getDirections = async (origin: any, destination: any) => {
+        try{
+            //TODO: maybe add desired arrival time or departure time, + desired route preference
+            const directionService = new google.maps.DirectionsService();
+            const directionsResults = await directionService.route({
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.TRANSIT,
+                unitSystem: google.maps.UnitSystem.IMPERIAL,
+                transitOptions: {
+                    modes: [google.maps.TransitMode.BUS, google.maps.TransitMode.SUBWAY],
+                    routingPreference: google.maps.TransitRoutePreference.LESS_WALKING
+                }
+            })
+            console.log(directionsResults);
+            return directionsResults;
+
+        } catch (error) {
+            notify('🛑 Error calculating directions! 🛑');
+            return null;
         }
     }
    
@@ -53,16 +77,22 @@ export default function SearchBar(
             return;
         }
         setCalculating(true);
-        //Add route coords to map state
+        const directionResults = await getDirections(originAddress.current?.value, destAddress.current?.value);
+        if (!directionResults) {
+            return;
+        }
         dispatch(setRoute({
             originAddress: originAddress.current?.value,
             originLatitude: originCoords.lat,
             originLongitude: originCoords.lng,
             destinationAddress: destAddress.current?.value,
             destinationLatitude: destCoords.lat,
-            destinationLongitude: destCoords.lng
+            destinationLongitude: destCoords.lng,
+            directions: JSON.stringify(directionResults),
+            distance: milesToKm(directionResults?.routes[0]?.legs[0]?.distance?.text),
+            eta: directionResults?.routes[0]?.legs[0]?.duration?.text
         }))
-
+        
         setCalculating(false);
     }
 
@@ -99,7 +129,10 @@ export default function SearchBar(
                                 </Input>
                             </Autocomplete>
                         </Box>
-                        <Text marginRight="auto" marginLeft="0">Route Distance:</Text>
+                        <HStack w='100%' marginRight="auto" marginLeft="0">
+                            <Heading size='sm'>Route Distance:</Heading>
+                            {mapState.distance && <Text>{`${mapState.distance} km`}</Text>}
+                        </HStack>
                     </VStack>
                     <VStack p={2} w="100%">
                         <Box w='100%'>
@@ -115,7 +148,10 @@ export default function SearchBar(
                                 </Input>
                             </Autocomplete>
                         </Box>
-                        <Text marginRight="auto" marginLeft="0">ETA: </Text>
+                        <HStack marginRight="auto" marginLeft="0">
+                            <Heading size='sm'>ETA:</Heading> 
+                            <Text>{mapState.eta}</Text>
+                        </HStack>
                     </VStack>
                 </Flex>
                 <Flex p={2} flexDirection="column">

@@ -17,6 +17,9 @@ export interface MapState {
     destinationAddress: string,
     destinationLongitude: string,
     destinationLatitude: string,
+    directions: any,
+    distance: string,
+    eta: string,
     stopsLoading: boolean,
     static_stops: any[]
 }
@@ -30,6 +33,9 @@ const initialState = {
     destinationAddress: "",
     destinationLongitude: "",
     destinationLatitude: "",
+    directions: null,
+    distance: "",
+    eta: "",
     stopsLoading: false,
     static_stops: []
 } as MapState
@@ -69,6 +75,9 @@ const mapSlice = createSlice({
                 destinationAddress: action.payload.destinationAddress,
                 destinationLatitude: action.payload.destinationLatitude,
                 destinationLongitude: action.payload.destinationLongitude,
+                directions: action.payload.directions,
+                distance: action.payload.distance,
+                eta: action.payload.eta
             }
         },
         clearLocation(state: any) {
@@ -80,19 +89,31 @@ const mapSlice = createSlice({
                 destinationAddress: initialState.destinationAddress,
                 destinationLatitude: initialState.destinationLatitude,
                 destinationLongitude: initialState.destinationLongitude,
+                distance: initialState.distance,
+                directions: initialState.directions,
+                eta: initialState.eta
             };
         },
     },
     extraReducers: (builder) => {
         builder.addCase(getStops.pending, (state: MapState) => {
-            state.stopsLoading = true;
+            return {
+                ...state,
+                stopsLoading: true,
+            }
         })
         builder.addCase(getStops.fulfilled, (state: MapState, action: PayloadAction<any>) => {
-            state.stopsLoading = false;
-            state.static_stops = action.payload.data
+            return {
+                ...state,
+                stopsLoading: false,
+                static_stops: action.payload.data
+            }
         })
         builder.addCase(getStops.rejected, (state: MapState, action: PayloadAction<any>) => {
-            state.stopsLoading = false;
+            return {
+                ...state,
+                stopsLoading: false
+            }
             //TODO: add error message in state to notify front end 
         })
     },

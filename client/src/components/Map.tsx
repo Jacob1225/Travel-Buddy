@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Box, Heading, Stack, Flex } from '@chakra-ui/react'
 import { getMemoizedMap, setCurrentLocation, getStops } from '../reducers/map';
-import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow } from '@react-google-maps/api';
+import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, DirectionsRenderer} from '@react-google-maps/api';
 import Spinner from './Spinner';
 import SearchBar from './SearchBar';
 import OptionsMenu from './OptionsMenu';
@@ -100,7 +100,7 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                     >
                         <MarkerF position={{lat: mapState.currentLatitude, lng: mapState.currentLongitude}}
                         />
-
+                        {mapState.directions && <DirectionsRenderer directions={JSON.parse(mapState.directions)}/>}
                         {mapState.static_stops.map((stop: any, index: number) => {
                             return (
                             <MarkerF 
