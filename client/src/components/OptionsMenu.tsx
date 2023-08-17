@@ -1,9 +1,13 @@
 import { Flex, IconButton, Tooltip} from '@chakra-ui/react'
 import { FaLocationArrow } from 'react-icons/fa'
 import { BiSolidHide, BiSolidShow } from 'react-icons/bi'
+import { FaBusAlt } from 'react-icons/fa';
 
 
-export default function OptionsMenu({clickCenterMap, hideStops, showStops, visibility}: {clickCenterMap: any, hideStops: any, showStops: any, visibility: boolean }) {
+export default function OptionsMenu(
+    {clickCenterMap, hideMarkers, showMarkers, stopVisible, busVisible, mapState}: 
+    {clickCenterMap: any, hideMarkers: any, showMarkers: any, stopVisible: boolean, busVisible: boolean, mapState: any}) 
+{
     
     return (
         <Flex
@@ -30,9 +34,10 @@ export default function OptionsMenu({clickCenterMap, hideStops, showStops, visib
                     onClick={() => clickCenterMap()}
                 />
             </Tooltip>
-            {visibility ?
+            {stopVisible ?
                 <Tooltip label='Hide Stops'> 
                     <IconButton 
+                        isDisabled={mapState.static_stops.length > 0 ? false : true }
                         bgColor='white'
                         aria-label='Hide stops'
                         icon={<BiSolidHide/> }
@@ -40,12 +45,13 @@ export default function OptionsMenu({clickCenterMap, hideStops, showStops, visib
                         width='10%'
                         m='auto'
                         mb='10px'
-                        onClick={() => hideStops()}
+                        onClick={() => hideMarkers("stops")}
                     />
                 </Tooltip>
                 :
                 <Tooltip label='Show Stops'>
-                    <IconButton 
+                    <IconButton
+                        isDisabled={mapState.static_stops.length > 0 ? false : true }
                         bgColor='white'
                         aria-label='Show stops'
                         icon={<BiSolidShow/> }
@@ -53,10 +59,39 @@ export default function OptionsMenu({clickCenterMap, hideStops, showStops, visib
                         width='10%'
                         m='auto'
                         mb='10px'
-                        onClick={() => showStops()}
+                        onClick={() => showMarkers("stops")}
+                    />
+                </Tooltip> 
+            }
+            {busVisible ? 
+                <Tooltip label='Hide Buses'> 
+                    <IconButton 
+                        isDisabled={mapState.vehicles.length > 0 ? false : true}
+                        bgColor='white'
+                        aria-label='Hide stops'
+                        icon={<BiSolidHide/> }
+                        size='md'
+                        width='10%'
+                        m='auto'
+                        mb='10px'
+                        onClick={() => hideMarkers("bus")}
                     />
                 </Tooltip>
-            }
+            :
+                <Tooltip label='Show Buses'>
+                    <IconButton 
+                        isDisabled={mapState.vehicles.length > 0 ? false : true}
+                        bgColor='white'
+                        aria-label='Show stops'
+                        icon={<FaBusAlt/> }
+                        size='md'
+                        width='10%'
+                        m='auto'
+                        mb='10px'
+                        onClick={() => showMarkers("bus")}
+                    />
+                </Tooltip> 
+                }
         </Flex>
     )
 }

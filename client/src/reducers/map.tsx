@@ -21,7 +21,11 @@ export interface MapState {
     distance: string,
     eta: string,
     stopsLoading: boolean,
-    static_stops: any[]
+    vehiclesLoading: boolean,
+    linesLoading: boolean
+    static_stops: any[],
+    vehicles: any[],
+    transitLines: any[],
 }
 
 const initialState = {
@@ -37,7 +41,11 @@ const initialState = {
     distance: "",
     eta: "",
     stopsLoading: false,
-    static_stops: []
+    vehiclesLoading: false,
+    linesLoading: false,
+    static_stops: [],
+    vehicles: [],
+    transitLines: []
 } as MapState
 
 /* Fetch data async */
@@ -46,6 +54,33 @@ export const getStops =  createAsyncThunk(
     async(data, thunkApi) => {
         try{
             const res = await axios.post(`${process.env.REACT_APP_DEV_URL}`, {})
+            console.log(res)
+            return res.data
+        } catch(error: any) {
+            console.log(error.message)
+            return thunkApi.rejectWithValue(error.message);
+        }
+    }
+)
+export const getVehicles =  createAsyncThunk(
+    'map/getVehicles',
+    async(data, thunkApi) => {
+        try{
+            const res = await axios.post(`${process.env.REACT_APP_DEV_URL_VEHICLES}`, {})
+            console.log(res)
+            return res.data
+        } catch(error: any) {
+            console.log(error.message)
+            return thunkApi.rejectWithValue(error.message);
+        }
+    }
+)
+
+export const getTransitLines =  createAsyncThunk(
+    'map/getTransitLines',
+    async(data, thunkApi) => {
+        try{
+            const res = await axios.post(`${process.env.REACT_APP_DEV_URL_LINES}`, {})
             console.log(res)
             return res.data
         } catch(error: any) {
@@ -109,12 +144,50 @@ const mapSlice = createSlice({
                 static_stops: action.payload.data
             }
         })
-        builder.addCase(getStops.rejected, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getStops.rejected, (state: MapState) => {
             return {
                 ...state,
                 stopsLoading: false
             }
             //TODO: add error message in state to notify front end 
+        })
+        builder.addCase(getVehicles.pending, (state: MapState) => {
+            return {
+                ...state,
+                vehiclesLoading: true,
+            }
+        })
+        builder.addCase(getVehicles.fulfilled, (state: MapState, action: PayloadAction<any>) => {
+            return {
+                ...state,
+                vehiclesLoading: false,
+                vehicles: action.payload.data
+            }
+        })
+        builder.addCase(getVehicles.rejected, (state: MapState) => {
+            return {
+                ...state,
+                vehiclesLoading: false
+            }
+        })
+        builder.addCase(getTransitLines.pending, (state: MapState) => {
+            return {
+                ...state,
+                linesLoading: true,
+            }
+        })
+        builder.addCase(getTransitLines.fulfilled, (state: MapState, action: PayloadAction<any>) => {
+            return {
+                ...state,
+                linesLoading: false,
+                transitLines: action.payload.data
+            }
+        })
+        builder.addCase(getTransitLines.rejected, (state: MapState) => {
+            return {
+                ...state,
+                linesLoading: false
+            }
         })
     },
 })

@@ -41,7 +41,7 @@ def calculate_distance(lat1: float, lat2: float, lon1: float, lon2: float) -> fl
 """
 
 
-def get_trip_list(trips, static_trips) -> List:
+def get_trip_list(trips, static_trips, static_stops) -> List:
     trips_list = []
 
     # process the feed
@@ -51,11 +51,16 @@ def get_trip_list(trips, static_trips) -> List:
         if entity.HasField('trip_update'):
             for stop in entity.trip_update.stop_time_update:
                 if stop.HasField('stop_sequence'):
+
+                    stop_row = static_stops[static_stops['stop_id'] == stop.stop_id]
+                    stop_name = stop_row.values[0][1] if len(stop_row) == 1 else 'N/A'
+
                     # create the stop sequence object
                     stop_obj = StopSequenceObj.from_dict(
                         {
                             "stop_sequence_id": str(stop.stop_sequence),
                             "stop_id": stop.stop_id,
+                            "stop_name": stop_name,
                             "schedule_relationship": str(stop.schedule_relationship),
                             "departure_time": stop.departure.time,
                             "arrival_time": stop.arrival.time,

@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Box, Heading, Stack, Flex } from '@chakra-ui/react'
-import { getMemoizedMap, setCurrentLocation, getStops } from '../reducers/map';
-import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, DirectionsRenderer} from '@react-google-maps/api';
+import { getMemoizedMap, setCurrentLocation, getStops, getVehicles, getTransitLines } from '../reducers/map';
+import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, DirectionsRenderer, Polyline} from '@react-google-maps/api';
 import Spinner from './Spinner';
 import SearchBar from './SearchBar';
 import OptionsMenu from './OptionsMenu';
+import { OCCUPANCYMAPPING, STATUSMAPPING } from '../mappings/vehiclesMappings'
 
 let mapsKey: string = String(process.env.REACT_APP_GOOGLE_MAPS_API);
 const libraries: any = ["places"];
@@ -16,15 +17,33 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
         googleMapsApiKey: mapsKey,
         libraries
     })
+
+    /*
+    TODO: 
+    1- Add bus vehicle positions when map loads with info window of bus information
+    2- Add hide vehicles button
+    3- Add Icon on bus markers
+    4- Add button to center map else where
+    5- Add slider for radius of stops and vehicles displayed
+
+    */ 
     
     //map & marker & visibility state
     const [map, setMap] = useState(null)
-    const [activeMarker, setActiveMarker] = useState(null);
-    const [visible, setVisible] = useState(true);
+    const [activeMarker, setActiveMarker] = useState({id: "", routeID: ""});
+    const [stopVisible, setStopVisible] = useState(true);
+    const [busVisible, setBusVisible] = useState(true);
+
+
 
     const navigate = useNavigate();
     let mapState = useSelector(getMemoizedMap);
-        
+    
+    const convertTimestamp = (timestamp: any) => {
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString('en-US', {hour: 'numeric', minute: 'numeric', hour12: true})
+    }
+
     const locationSuccess = (position: any) => {
         dispatch(setCurrentLocation({
             currentLatitude: position.coords.latitude,
@@ -36,11 +55,11 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
         console.log('Cannot get user location ', error);
     } 
 
-    const handleActiveMarker = (stopID: any) => {
-        if (stopID === activeMarker) {
+    const handleActiveMarker = (markerID: string, routeID: string) => {
+        if (markerID === activeMarker.id) {
           return;
         }
-        setActiveMarker(stopID);
+        setActiveMarker({id: markerID, routeID: routeID});
     };
     
     const panTo = (map: any) => {
@@ -50,32 +69,36 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
         panTo(map)
     }
 
-    const hideStops = () => {
-        setVisible(false)
+    const hideMarkers = (markerType: string) => {
+        if (markerType === 'stops') setStopVisible(false); else setBusVisible(false);
     }
 
-    const showStops = () => {
-        setVisible(true)
+    const showMarkers = (markerType: string) => {
+        if (markerType === 'stops') setStopVisible(true); else setBusVisible(true);
     }
 
     useEffect(() => {
-        //if no credentials redirect to login - else fetch stops
         if (!cookies.credentials) {
             navigate("/");
         }
-
+        notify('🦄 Stops & Buses are loading!');
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
         }
 
-        /* Fetch stops only if no stops in state
+        /* Fetch stops & vehicles only if no stops/vehicles in state
             Will fetch on refresh as size of data is too large to be persisted 
         */
         if (mapState && mapState.static_stops.length === 0) {
             dispatch(getStops()) 
         }
+        if (mapState && mapState.vehicles.length === 0) {
+            dispatch(getVehicles());
+        }
+        if (mapState && mapState.transitLines.length === 0) {
+            dispatch(getTransitLines())
+        }
     }, [dispatch, cookies.credentials])
-
     return(
         <Flex 
             position='relative'
@@ -98,18 +121,28 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                         mapContainerStyle={{width: '100%', height: '100%'}}
                         onLoad={(map: any) => setMap(map)}
                     >
-                        <MarkerF position={{lat: mapState.currentLatitude, lng: mapState.currentLongitude}}
+                        {mapState.transitLines.map((line: any, index: number) => {
+                            return (
+                                <Polyline key={index} 
+                                    path={line.sequence} 
+                                    visible={activeMarker.routeID == line.route_id ? true : false}
+                                    options={{strokeColor:`#${line.route_color}`, strokeOpacity:2.0, strokeWeight:5}}/>)
+                        })}
+                        <MarkerF 
+                            position={{lat: mapState.currentLatitude, lng: mapState.currentLongitude}}
+                            icon={{url: require('../assets/user.svg').default}
+                        }
                         />
                         {mapState.directions && <DirectionsRenderer directions={JSON.parse(mapState.directions)}/>}
                         {mapState.static_stops.map((stop: any, index: number) => {
                             return (
                             <MarkerF 
                                 key={index} position={{lat: stop.stop_lat, lng: stop.stop_lon}}
-                                visible={visible} 
-                                onClick={() => handleActiveMarker(stop.stop_id)}
+                                visible={stopVisible} 
+                                onClick={() => handleActiveMarker(stop.stop_id, stop.route_id)}
                             >
-                                {activeMarker === stop.stop_id ? (
-                                    <InfoWindow onCloseClick={() => setActiveMarker(null)}>
+                                {activeMarker.id === stop.stop_id ? (
+                                    <InfoWindow onCloseClick={() => setActiveMarker({id: "", routeID: ""})}>
                                         <Stack>
                                             <Box><Heading size='xs'>Stop Name:</Heading> {stop.stop_name}</Box>
                                             <Box><Heading size='xs'>Transit Line:</Heading> {stop.route_short_name}</Box>
@@ -121,16 +154,50 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                                 ) : null}
                             </MarkerF>)
                         })}
+                        {mapState.vehicles.length > 0 && mapState.vehicles.map((vehicle: any, index: number) => {
+                            return (
+                                <MarkerF 
+                                    key={index} position={{lat: vehicle.latitude, lng: vehicle.longitude}}
+                                    icon={{url: require('../assets/bus-svgrepo-com.svg').default}}
+                                    visible={busVisible}
+                                    onClick={() => handleActiveMarker(vehicle.vehicle_id, vehicle.route_id)}
+                                >
+                                {activeMarker.id === vehicle.vehicle_id ? (
+                                    <InfoWindow onCloseClick={() => setActiveMarker({id: "", routeID: ""})}>
+                                        <Stack>
+                                            <Box><Heading size='xs'>Bus #:</Heading> {vehicle.route_id}</Box>
+                                            <Box><Heading size='xs'>Bus Start Time:</Heading> {vehicle.start_time}</Box>
+                                            <Box>
+                                                <Heading size='xs'>Next Stop:</Heading>
+                                                {vehicle.trip.length !== 0 && vehicle.trip[0].stop_sequence.length !== 0 && vehicle.trip[0].stop_sequence[0].stop_name}
+                                            </Box>
+                                            <Box>
+                                                <Heading size='xs'>Next Stop Arrival:</Heading>
+                                                {vehicle.trip.length !== 0 && vehicle.trip[0].stop_sequence.length !== 0 && convertTimestamp(vehicle.trip[0].stop_sequence[0].arrival_time)}
+                                            </Box>
+                                            <Box><Heading size='xs'>Bus Status:</Heading> {STATUSMAPPING[vehicle.current_status]}</Box>
+                                            <Box><Heading size='xs'>Occupancy level:</Heading> {OCCUPANCYMAPPING[vehicle.occupancy_status]}</Box>
+                                            <Box><Heading size='xs'>Current Speed:</Heading> {parseFloat(vehicle.speed).toFixed(2).toString()} km/h</Box>
+                                            <Box><Heading size='xs'>Last Updated At:</Heading> {convertTimestamp(vehicle.timestamp)}</Box>
+                                            <Box><Heading size='xs'>Index:</Heading> {index}</Box>
+                                        </Stack>
+                                    </InfoWindow>
+                                ) : null}
+                                </MarkerF>
+                            )
+                        })}
                     </GoogleMap>
                 :
                     <Spinner color={"white"} loading={true}/>}
             </Box>
                 <SearchBar isLoaded={isLoaded} dispatch={dispatch} notify={notify} mapState={mapState} />
             <OptionsMenu 
+                mapState={mapState}
                 clickCenterMap={clickCenterMap}
-                hideStops={hideStops}
-                showStops={showStops}
-                visibility={visible}
+                hideMarkers={hideMarkers}
+                showMarkers={showMarkers}
+                stopVisible={stopVisible}
+                busVisible={busVisible}
             />
         </Flex>
     )

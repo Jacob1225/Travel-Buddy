@@ -39,6 +39,7 @@ class BaseDocument(object):
 class StopSequenceObj(BaseDocument):
     stop_sequence_id: str
     stop_id: str
+    stop_name: str
     departure_time: Optional[int] = None
     schedule_relationship: Optional[str] = None
     arrival_time: Optional[int] = None
@@ -76,4 +77,5 @@ class VehiclePosition(BaseDocument):
     current_stop_sequence: str
     current_status: str
     occupancy_status: str
+    timestamp: str
     current_stop_id: Optional[str] = None

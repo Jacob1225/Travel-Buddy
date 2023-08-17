@@ -81,6 +81,11 @@ export default function SearchBar(
         if (!directionResults) {
             return;
         }
+        /*
+            TODO: Add different route preferences: 
+            walking less or less bus transfers
+            
+        */
         dispatch(setRoute({
             originAddress: originAddress.current?.value,
             originLatitude: originCoords.lat,
@@ -97,7 +102,6 @@ export default function SearchBar(
     }
 
     const clearRoute = () => {
-        //TODO: add clearing state + clear all markers and directions from map
         dispatch(clearLocation());
         if (originAddress.current) originAddress.current.value = "";
         if (destAddress.current) destAddress.current.value = "";
