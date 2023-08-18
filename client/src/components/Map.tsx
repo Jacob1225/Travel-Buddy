@@ -33,12 +33,11 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
     const [activeMarker, setActiveMarker] = useState({id: "", routeID: ""});
     const [stopVisible, setStopVisible] = useState(true);
     const [busVisible, setBusVisible] = useState(true);
-
-
+    const [center, setCenter] = useState({lat: 0, lng: 0})
 
     const navigate = useNavigate();
     let mapState = useSelector(getMemoizedMap);
-    
+
     const convertTimestamp = (timestamp: any) => {
         const date = new Date(timestamp * 1000);
         return date.toLocaleString('en-US', {hour: 'numeric', minute: 'numeric', hour12: true})
@@ -55,33 +54,39 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
         console.log('Cannot get user location ', error);
     } 
 
-    const handleActiveMarker = (markerID: string, routeID: string) => {
+    const handleActiveMarker = (markerID: string, routeID: string, lat: number, lng: number) => {
         if (markerID === activeMarker.id) {
           return;
         }
         setActiveMarker({id: markerID, routeID: routeID});
+        setCenter({lat, lng});
     };
     
-    const panTo = (map: any) => {
-        map.panTo({lat: mapState.currentLatitude, lng: mapState.currentLongitude})
+    const panTo = (map: any, lat: number, lng: number) => {
+        setCenter({lat: 0, lng: 0})
+        map.panTo({lat, lng});
     }
     const clickCenterMap = () => {
-        panTo(map)
+        panTo(map, mapState.currentLatitude, mapState.currentLongitude);
     }
 
     const hideMarkers = (markerType: string) => {
         if (markerType === 'stops') setStopVisible(false); else setBusVisible(false);
+        setActiveMarker({id: "", routeID: ""});
     }
 
     const showMarkers = (markerType: string) => {
         if (markerType === 'stops') setStopVisible(true); else setBusVisible(true);
+        setActiveMarker({id: "", routeID: ""});
     }
 
     useEffect(() => {
         if (!cookies.credentials) {
             navigate("/");
         }
-        notify('🦄 Stops & Buses are loading!');
+        if (mapState && mapState.static_stops.length === 0 && mapState.vehicles.length === 0) {
+            notify('🦄 Stops & Buses are loading!');
+        }
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
         }
@@ -99,6 +104,7 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
             dispatch(getTransitLines())
         }
     }, [dispatch, cookies.credentials])
+
     return(
         <Flex 
             position='relative'
@@ -116,7 +122,7 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
             >
                 {isLoaded ? 
                     <GoogleMap
-                        center={{lat: mapState.currentLatitude, lng: mapState.currentLongitude}}
+                        center={center.lat !== 0 ? center : {lat: mapState.currentLatitude, lng: mapState.currentLongitude}}
                         zoom={15}
                         mapContainerStyle={{width: '100%', height: '100%'}}
                         onLoad={(map: any) => setMap(map)}
@@ -125,7 +131,7 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                             return (
                                 <Polyline key={index} 
                                     path={line.sequence} 
-                                    visible={activeMarker.routeID == line.route_id ? true : false}
+                                    visible={(activeMarker.routeID).toString() === (line.route_id).toString() ? true : false}
                                     options={{strokeColor:`#${line.route_color}`, strokeOpacity:2.0, strokeWeight:5}}/>)
                         })}
                         <MarkerF 
@@ -138,11 +144,13 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                             return (
                             <MarkerF 
                                 key={index} position={{lat: stop.stop_lat, lng: stop.stop_lon}}
-                                visible={stopVisible} 
-                                onClick={() => handleActiveMarker(stop.stop_id, stop.route_id)}
+                                visible={(stopVisible && activeMarker.id === "") || (activeMarker.id !== "" && (activeMarker.routeID).toString() === (stop.route_id).toString())} 
+                                onClick={() => handleActiveMarker(stop.stop_id, stop.route_id, stop.stop_lat, stop.stop_lon)}
                             >
                                 {activeMarker.id === stop.stop_id ? (
-                                    <InfoWindow onCloseClick={() => setActiveMarker({id: "", routeID: ""})}>
+                                    <InfoWindow onCloseClick={() => {
+                                        setActiveMarker({id: "", routeID: ""})
+                                    }}>
                                         <Stack>
                                             <Box><Heading size='xs'>Stop Name:</Heading> {stop.stop_name}</Box>
                                             <Box><Heading size='xs'>Transit Line:</Heading> {stop.route_short_name}</Box>
@@ -159,11 +167,12 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                                 <MarkerF 
                                     key={index} position={{lat: vehicle.latitude, lng: vehicle.longitude}}
                                     icon={{url: require('../assets/bus-svgrepo-com.svg').default}}
-                                    visible={busVisible}
-                                    onClick={() => handleActiveMarker(vehicle.vehicle_id, vehicle.route_id)}
+                                    visible={(busVisible && activeMarker.id === "") || (activeMarker.id !== "" && (activeMarker.routeID).toString() === (vehicle.route_id).toString())}
+                                    onClick={() => handleActiveMarker(vehicle.vehicle_id, vehicle.route_id, vehicle.latitude, vehicle.longitude)}
                                 >
                                 {activeMarker.id === vehicle.vehicle_id ? (
-                                    <InfoWindow onCloseClick={() => setActiveMarker({id: "", routeID: ""})}>
+                                    <InfoWindow onCloseClick={() => {
+                                        setActiveMarker({id: "", routeID: ""})}}>
                                         <Stack>
                                             <Box><Heading size='xs'>Bus #:</Heading> {vehicle.route_id}</Box>
                                             <Box><Heading size='xs'>Bus Start Time:</Heading> {vehicle.start_time}</Box>
