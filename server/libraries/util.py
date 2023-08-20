@@ -69,10 +69,11 @@ def get_trip_list(trips, static_trips, static_stops) -> List:
                     stop_list.append(stop_obj)
 
             # create the trip obj
-            trip_headsign = static_trips[static_trips["trip_id"] == entity.trip_update.trip.trip_id].values
-        
-            if not trip_headsign:
+            trip_headsign = static_trips[static_trips["trip_id"] == str(entity.id)].values
+
+            if len(trip_headsign) == 0:
                 trip_headsign = ""
+                break
             else:
                 trip_headsign = trip_headsign[0][3]
 

@@ -7,7 +7,7 @@ import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, DirectionsRenderer, Pol
 import Spinner from './Spinner';
 import SearchBar from './SearchBar';
 import OptionsMenu from './OptionsMenu';
-import { OCCUPANCYMAPPING, STATUSMAPPING } from '../mappings/vehiclesMappings'
+import { OCCUPANCYMAPPING, STATUSMAPPING } from '../mappings/vehiclesMappings';
 
 let mapsKey: string = String(process.env.REACT_APP_GOOGLE_MAPS_API);
 const libraries: any = ["places"];
@@ -25,7 +25,6 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
     3- Add Icon on bus markers
     4- Add button to center map else where
     5- Add slider for radius of stops and vehicles displayed
-
     */ 
     
     //map & marker & visibility state
@@ -78,6 +77,26 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
     const showMarkers = (markerType: string) => {
         if (markerType === 'stops') setStopVisible(true); else setBusVisible(true);
         setActiveMarker({id: "", routeID: ""});
+    }
+
+    const getNearestArrivalTime = (times: any) => {
+        let result: string[] = [];
+        const currentTime = new Date().toLocaleString('en-US', {timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: true});
+        const splitTime = currentTime.split(':');
+        let currHour = Number(splitTime[0]);
+        let currMin = Number(splitTime[1].split(" ")[0]);
+        const amPm = splitTime[1][splitTime[1].length - 2];
+        if (amPm === 'P') currHour += 12; 
+
+        for (const hour of times) {
+            const fSplit = hour.split(":");
+            const fHour = Number(fSplit[0]);
+            const fMin = Number(fSplit[1]);
+            if (fHour === currHour && (fMin >= currMin && fMin <= currMin + 10)) {
+                if(!result.includes(hour)) result.push(hour);
+            }
+        }
+        return result;
     }
 
     useEffect(() => {
@@ -156,6 +175,12 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                                             <Box><Heading size='xs'>Transit Line:</Heading> {stop.route_short_name}</Box>
                                             <Box><Heading size='xs'>Transit Direction:</Heading> {stop.trip_headsign}</Box>
                                             <Box><Heading size='xs'>Route Name:</Heading> {stop.route_long_name}</Box>
+                                            <Flex flexDirection='column'>
+                                                <Heading size='xs'>Next Arrival Times:</Heading> 
+                                                {getNearestArrivalTime(stop.arrival_time).map((time: string) => {
+                                                    return (<Box>{time}</Box>)
+                                                })}
+                                            </Flex>
                                             <Box><Heading size='xs'>Stop Type:</Heading> {stop.route_type === 1 ? 'Metro': 'Bus'}</Box>
                                         </Stack>
                                     </InfoWindow>
@@ -178,11 +203,11 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                                             <Box><Heading size='xs'>Bus Start Time:</Heading> {vehicle.start_time}</Box>
                                             <Box>
                                                 <Heading size='xs'>Next Stop:</Heading>
-                                                {vehicle.trip.length !== 0 && vehicle.trip[0].stop_sequence.length !== 0 && vehicle.trip[0].stop_sequence[0].stop_name}
+                                                {vehicle.trip.length !== 0 && vehicle.trip[0].stop_sequence.length !== 0 ? vehicle.trip[0].stop_sequence[0].stop_name : 'Next Stop Unknown'}
                                             </Box>
                                             <Box>
                                                 <Heading size='xs'>Next Stop Arrival:</Heading>
-                                                {vehicle.trip.length !== 0 && vehicle.trip[0].stop_sequence.length !== 0 && convertTimestamp(vehicle.trip[0].stop_sequence[0].arrival_time)}
+                                                {vehicle.trip.length !== 0 && vehicle.trip[0].stop_sequence.length !== 0 ? convertTimestamp(vehicle.trip[0].stop_sequence[0].arrival_time): 'Next Arrival Time Unknown'}
                                             </Box>
                                             <Box><Heading size='xs'>Bus Status:</Heading> {STATUSMAPPING[vehicle.current_status]}</Box>
                                             <Box><Heading size='xs'>Occupancy level:</Heading> {OCCUPANCYMAPPING[vehicle.occupancy_status]}</Box>

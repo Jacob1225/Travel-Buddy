@@ -1,4 +1,5 @@
 import pandas as pd
+from ast import literal_eval
 import traceback
 from libraries.util import calculate_distance
 from libraries.security import Authenticator
@@ -47,7 +48,7 @@ def get_stops(request):
                     "stop_lon": stop.stop_lon,
                     "route_id": stop.route_id,
                     "trip_headsign": stop.trip_headsign,
-                    "arrival_time": stop.arrival_time,
+                    "arrival_time": literal_eval(stop.arrival_time),
                     "route_short_name": stop.route_short_name,
                     "route_long_name": stop.route_long_name,
                     "route_type": stop.route_type
