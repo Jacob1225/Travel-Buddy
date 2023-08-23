@@ -1,10 +1,11 @@
-import json
+import json, os
 from google.cloud import secretmanager
 
 
 class Authenticator:
     def __init__(self):
-        self.project_id = "travel-buddy-362314"
+        self.project_id = os.environ['GCP_PROJECT']
+
 
     """
         Method used to load secrets within microservices
