@@ -1,5 +1,9 @@
 import pandas as pd
 from ast import literal_eval
+from os import path
+import sys
+sys.path.append(path.join(path.dirname(__file__), '.'))
+
 import traceback
 from libraries.util import calculate_distance
 from libraries.security import Authenticator

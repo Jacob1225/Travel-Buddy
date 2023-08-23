@@ -1,6 +1,10 @@
 import pandas as pd
 import traceback
-from libraries.util import calculate_distance, get_trip_list
+import sys
+from os import path
+sys.path.append(path.join(path.dirname(__file__), '.'))
+
+from libraries.util import get_trip_list
 from libraries.security import Authenticator
 from libraries.stm_api import StmAPi
 from libraries.common import VehiclePosition

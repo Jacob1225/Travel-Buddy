@@ -4,9 +4,15 @@ from google.cloud import secretmanager
 
 class Authenticator:
     def __init__(self):
-        self.project_id = os.environ['GCP_PROJECT']
-
-
+        if 'GCP_PROJECT' in os.environ:
+            self.project_id = os.environ['GCP_PROJECT']
+        
+        #else cloud function is running locally 
+        else:
+            with open(os.path.abspath('credentials.json'), 'r') as fp:
+                credentials = json.load(fp)
+                self.project_id = credentials['project_id']
+        
     """
         Method used to load secrets within microservices
         returns a dictionary format for the requested secret

@@ -1,5 +1,7 @@
 from ast import literal_eval
-import os 
+from os import path
+import sys
+sys.path.append(path.join(path.dirname(__file__), '.'))
 import pandas as pd
 import traceback
 from libraries.security import Authenticator
