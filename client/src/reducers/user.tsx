@@ -25,13 +25,12 @@ const userSlice = createSlice({
             return {...state, email: action.payload.email, name: action.payload.name, given_name: action.payload.given_name, isLogged: action.payload.isLogged}
         },
         logoutUser(state: any) {
-            state = initialState;
-
+            return initialState;
         },
     }
 })
 
-export const { loginUser } = userSlice.actions;
+export const { loginUser, logoutUser } = userSlice.actions;
 export default userSlice.reducer;
 
 export const getMemoizedUser = createSelector(

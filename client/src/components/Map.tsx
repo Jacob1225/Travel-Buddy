@@ -7,12 +7,13 @@ import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, DirectionsRenderer, Pol
 import Spinner from './Spinner';
 import SearchBar from './SearchBar';
 import OptionsMenu from './OptionsMenu';
+import Logout from './Logout';
 import { OCCUPANCYMAPPING, STATUSMAPPING } from '../mappings/vehiclesMappings';
 
 let mapsKey: string = String(process.env.REACT_APP_GOOGLE_MAPS_API);
 const libraries: any = ["places"];
 
-export default function Map({cookies, dispatch, notify }: {cookies: any, dispatch: any, notify: any}) { //TODO: maybe type the props? 
+export default function Map({cookies, dispatch, notify, removeCookie }: {cookies: any, dispatch: any, notify: any, removeCookie: any}) { //TODO: maybe type the props? 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: mapsKey,
         libraries
@@ -102,6 +103,7 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
     useEffect(() => {
         if (!cookies.credentials) {
             navigate("/");
+            return;
         }
         if (mapState && mapState.static_stops.length === 0 && mapState.vehicles.length === 0) {
             notify('🦄 Stops & Buses are loading!');
@@ -233,6 +235,7 @@ export default function Map({cookies, dispatch, notify }: {cookies: any, dispatc
                 stopVisible={stopVisible}
                 busVisible={busVisible}
             />
+            <Logout removeCookie={removeCookie} dispatch={dispatch} notify={notify}/>
         </Flex>
     )
 }

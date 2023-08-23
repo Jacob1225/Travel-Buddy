@@ -54,6 +54,7 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
     }); 
 
     return (
-        <Spline scene="https://prod.spline.design/FxfNdLxC2I8o3LF1/scene.splinecode"/>
+   
+            <Spline scene="https://prod.spline.design/FxfNdLxC2I8o3LF1/scene.splinecode"/>
     );
 }

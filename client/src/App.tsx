@@ -38,6 +38,7 @@ export default function App() {
             cookies={cookies}
             dispatch={dispatch}
             notify={notify}
+            removeCookie={removeCookie}
           /> }/>
         </Routes>
       </Router>
