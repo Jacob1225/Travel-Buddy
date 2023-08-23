@@ -1,4 +1,5 @@
 import pandas as pd
+import os 
 from ast import literal_eval
 import traceback
 from libraries.util import calculate_distance
@@ -37,7 +38,7 @@ def get_stops(request):
     try:
         stops = []
         # load stop_schedule.csv as dataframe from cloud storage
-        static_stops = pd.read_csv("gs://travel-buddy/static/filtered_stops_2.csv")
+        static_stops = pd.read_csv(f"{os.environ['BUCKET']}filtered_stops_2.csv")
         
         for stop in static_stops.itertuples():
             stops.append(

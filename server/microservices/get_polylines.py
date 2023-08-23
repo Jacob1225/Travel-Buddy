@@ -1,4 +1,5 @@
 from ast import literal_eval
+import os 
 import pandas as pd
 import traceback
 from libraries.security import Authenticator
@@ -31,7 +32,7 @@ def get_polylines(request):
 
     try:
         # load stm_lines.csv from cloud storage
-        static_lines = pd.read_csv("gs://travel-buddy/static/stm_lines.csv")
+        static_lines = pd.read_csv(f"{os.environ['BUCKET']}stm_lines.csv")
         response_list =[]
 
         for line in static_lines.itertuples():

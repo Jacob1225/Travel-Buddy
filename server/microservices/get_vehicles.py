@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 import traceback
 from libraries.util import calculate_distance, get_trip_list
 from libraries.security import Authenticator
@@ -44,8 +45,8 @@ def get_vehicles(request):
 
     try:
         # load stops.csv & trips.csv from cloud storage
-        static_trips = pd.read_csv("gs://travel-buddy/static/trips.csv", dtype=str)
-        static_stops = pd.read_csv("gs://travel-buddy/static/stops.csv")
+        static_trips = pd.read_csv(f"{os.environ['BUCKET']}trips.csv", dtype=str)
+        static_stops = pd.read_csv(f"{os.environ['BUCKET']}stops.csv")
 
         # fetch vehicle positions from api
         vehicles = stm_api.get_vehicle_positions()
