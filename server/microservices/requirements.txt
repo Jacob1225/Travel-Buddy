@@ -1,4 +1,6 @@
 gcsfs
+google-auth
+PyJWT
 pandas
 dacite
 requests

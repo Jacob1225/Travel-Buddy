@@ -2,7 +2,8 @@ import pandas as pd
 from ast import literal_eval
 from os import path
 import sys
-sys.path.append(path.join(path.dirname(__file__), '.'))
+
+sys.path.append(path.join(path.dirname(__file__), "."))
 
 import traceback
 from libraries.util import calculate_distance
@@ -21,28 +22,11 @@ stm_api = StmAPi(secrets["api_key"])
 
 
 def get_stops(request):
-    # TODO: add token authentication
-    if request.method == "OPTIONS":
-        # Allows GET requests from any origin with the Content-Type
-        # header and caches preflight response for an 3600s
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Max-Age": "3600",
-        }
-
-        return ("", 204, headers)
-
-    payload = request.get_json()
-    print('payload', payload)
-    headers = {"Access-Control-Allow-Origin": "*"}
-    
     try:
         stops = []
         # load stop_schedule.csv as dataframe from cloud storage
         static_stops = pd.read_csv(f"{secrets['gcp_bucket']}filtered_stops_2.csv")
-        
+
         for stop in static_stops.itertuples():
             stops.append(
                 {
@@ -55,14 +39,12 @@ def get_stops(request):
                     "arrival_time": literal_eval(stop.arrival_time),
                     "route_short_name": stop.route_short_name,
                     "route_long_name": stop.route_long_name,
-                    "route_type": stop.route_type
+                    "route_type": stop.route_type,
                 }
             )
-        print('reached success')
-        return ({"message": "stop schedule retrieved", "data": stops}, 200, headers)
+        return {"message": "stop schedule retrieved", "data": stops}
 
-    # TODO change exception when testing and new exceptions are known
     except Exception as e:
         traceback.print_exc()
         print(e)
-        return ({"message": f"Error retriveing stops: {e}", "data": None}, 500, headers)
+        raise Exception("Error retrieving stops")

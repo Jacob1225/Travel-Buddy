@@ -1,7 +1,8 @@
 from ast import literal_eval
 from os import path
 import sys
-sys.path.append(path.join(path.dirname(__file__), '.'))
+
+sys.path.append(path.join(path.dirname(__file__), "."))
 import pandas as pd
 import traceback
 from libraries.security import Authenticator
@@ -17,25 +18,25 @@ secrets = authenticator.load_secrets("stm-secret")
 
 
 def get_polylines(request):
-    # TODO: add token authentication
-    if request.method == "OPTIONS":
-        # Allows GET requests from any origin with the Content-Type
-        # header and caches preflight response for an 3600s
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Max-Age": "3600",
-        }
+    # # TODO: add token authentication
+    # if request.method == "OPTIONS":
+    #     # Allows GET requests from any origin with the Content-Type
+    #     # header and caches preflight response for an 3600s
+    #     headers = {
+    #         "Access-Control-Allow-Origin": "*",
+    #         "Access-Control-Allow-Methods": "GET",
+    #         "Access-Control-Allow-Headers": "Content-Type",
+    #         "Access-Control-Max-Age": "3600",
+    #     }
 
-        return ("", 204, headers)
+    #     return ("", 204, headers)
 
-    headers = {"Access-Control-Allow-Origin": "*"}
+    # headers = {"Access-Control-Allow-Origin": "*"}
 
     try:
         # load stm_lines.csv from cloud storage
         static_lines = pd.read_csv(f"{secrets['gcp_bucket']}stm_lines.csv")
-        response_list =[]
+        response_list = []
 
         for line in static_lines.itertuples():
             obj = {
@@ -43,13 +44,11 @@ def get_polylines(request):
                 "headsign": line.headsign,
                 "route_name": line.route_name,
                 "route_color": line.route_color,
-                "sequence": literal_eval(line.sequence)
+                "sequence": literal_eval(line.sequence),
             }
             response_list.append(obj)
 
-        return ({"message": "stm lines retrieved", "data": response_list}, 200, headers)
+        return {"message": "stm lines retrieved", "data": response_list}
 
-    # TODO change exception when testing and new exceptions are known
     except Exception as e:
-        traceback.print_exc()
-        return ({"message": f"Error retriveing stm lines {e}", "data": None}, 500, headers)
+        raise Exception("Error retrieving stm lines")
