@@ -1,3 +1,4 @@
+from inspect import trace
 import requests
 import traceback
 import sys
@@ -30,7 +31,7 @@ def request_handler(request):
         headers = {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": ["GET", "POST"],
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Max-Age": "3600",
         }
 
@@ -38,14 +39,16 @@ def request_handler(request):
 
     headers = {"Access-Control-Allow-Origin": "*"}
 
-    cipher = request.data
-    if not cipher:
+    # cipher = request.data
+    payload = request.get_json()
+
+    if not payload:
         raise BadRequest(description="Bad Request: no payload given")
 
     try:
-        # decrypt the payload
-        decoded_cipher = authenticator.decrypt_cipher(cipher)
-        payload = json.loads(decoded_cipher)
+        # decrypt the payload - UPDATE - Browser encryption is not being decrypted
+        # decoded_cipher = authenticator.decrypt_cipher(cipher)
+        # payload = json.loads(decoded_cipher)
 
         # validate that the url is in the payload
         if "target_url" not in payload:
@@ -57,27 +60,32 @@ def request_handler(request):
         payload.pop("target_name")
 
         # validate user credentials
+        new_jwt = None
         if target_name != "authenticate_user":
             # authenticator.validate_google_credentials(request.headers["Authorization"])
             # google credentials valid and jwt is being used
-            authenticator.validate_token(request.headers["Authorization"])
+            new_jwt = authenticator.validate_token(request.headers["Authorization"])
 
         res = requests.post(url=target_url, json=payload, headers=request.headers)
-        return (res.json(), 200, headers)
+        response = res.json()
+        if new_jwt:
+            response["new_token"] = new_jwt
+
+        return (response, 200, headers)
 
     except BadRequest as e:
         print("bad request error ", e)
         return ({"message": f"Bad Request: {e}"}, 400, headers)
 
-    except ValueError:
+    except ValueError as e:
         # If thrown google token invalid
-        return ({"message": "Invalid or Expired Google Token"}, 403, headers)
+        if e == "improper encryption":
+            return ({"message": "payload is improperly encrypted"}, 400, headers)
+        else:
+            return ({"message": "Invalid or Expired Google Credentials"}, 403, headers)
 
     except InvalidSignatureError:
         return ({"message": "jwt signature invalid:"}, 403, headers)
-
-    except ExpiredSignatureError:
-        return ({"message": "jwt token expired"}, 403, headers)
 
     except Exception as e:
         print("exception ", e)

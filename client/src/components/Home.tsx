@@ -1,7 +1,7 @@
 import Spline from '@splinetool/react-spline';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser} from '../reducers/user'; 
+import { loginUser, validateUser} from '../reducers/user'; 
 import { useGoogleOneTapLogin } from 'react-google-one-tap-login';
 import jwt_decode from "jwt-decode";
 
@@ -26,20 +26,30 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
             const token: any = jwt_decode(cookies.credentials);
             dispatch(loginUser({name: token.name, email: token.email,
                 given_name: token.given_name, isLogged: true}));
-            notify(`🦄 Welcome back!`) //TODO: find user name in state
+            notify(`🦄 Welcome back!`)
             navigate('map')
         }
         else if ('g_state' in cookies) {removeCookie('g_state', {path: '/'}) };
     })
     
-    const callback = (response: Credentials) => {
+    const callback = async (response: Credentials) => {
         if (response && 'credential' in response){
             const token: any = jwt_decode(response.credential);
             setCookie('credentials', response.credential, { path: '/'});
             dispatch(loginUser({name: token.name, email: token.email,
                 given_name: token.given_name, isLogged: true}));
+            
+            //Validate google credentials in backend
+            const serverToken = await dispatch(validateUser(response.credential));
+            
+            if("token" in serverToken.data){
+                setCookie('jwt-token', serverToken.data.token, {path: '/'});
                 notify(`🦄 Welcome ${token.name}!`)
-            navigate('/map');
+                navigate('/map');
+            } else {
+                notify.error('Error Validating google credentials');
+            }
+
         } else {
             notify.error('Login Error!');
         }

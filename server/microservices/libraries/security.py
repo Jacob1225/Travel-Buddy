@@ -1,4 +1,5 @@
 import json, os
+import traceback
 import jwt
 from dotenv import load_dotenv
 from jwt import InvalidSignatureError, ExpiredSignatureError
@@ -61,6 +62,13 @@ class Authenticator:
                 cipher, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
             )
             return payload.decode("utf-8")
+
+        except ValueError as e:
+            print(e)
+            print(traceback.print_exc())
+            # If the cipher has been encrypted differently
+            raise ValueError("improper encryption")
+
         except Exception as e:
             print(e)
             raise Exception("cipher could not be decrypted")
@@ -104,6 +112,19 @@ class Authenticator:
             raise Exception("payload could not be signed")
 
     """
+        Method that generates a jwt token
+    """
+
+    def generate_token(self, payload):
+        encoded_jwt = jwt.encode(
+            payload,
+            self.keys["loaded_pk"],
+            algorithm="RS256",
+        )
+
+        return encoded_jwt
+
+    """
         Method that validates if the google login credentials 
         are valid and returns a sign & encoded jwt token to the client
         that is to be used in future requests
@@ -118,24 +139,17 @@ class Authenticator:
             if idinfo["email"] != self.allowed_user:
                 raise ValueError("Google user has insufficient access")
 
-            encoded_jwt = jwt.encode(
+            encoded_jwt = self.generate_token(
                 {
                     "userid": idinfo["sub"],
                     "email": idinfo["email"],
-                    "exp": idinfo["exp"],
-                },
-                self.keys["loaded_pk"],
-                algorithm="RS256",
+                }
             )
-
-            # sign encoded jwt token
-            # signed_jwt = self.sign_payload(encoded_jwt)
-            # return {"jwt": encoded_jwt, "signed_jwt": signed_jwt}
             return encoded_jwt
 
         except ValueError as e:
             # Invalid token or User is not test user
-            raise ValueError(e)
+            raise ValueError("Invalid or Expired Google Token")
 
         except Exception as e:
             # Other unknown exceptions to be caught/raised
@@ -149,7 +163,12 @@ class Authenticator:
             raise InvalidSignatureError
 
         except ExpiredSignatureError:
-            raise ExpiredSignatureError
+            # If token is expired - generate a new token for the invoker
+            token_payload = jwt.decode(
+                jwt_token, self.keys["loaded_pub"], algorithms=["RS256"], options={"verify_signature": False}
+            )
+            new_token = self.generate_token(token_payload)
+            return new_token
 
         except Exception as e:
             print("Unknown Token Exception caught: ", e)
