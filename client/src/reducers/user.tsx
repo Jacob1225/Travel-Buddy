@@ -37,7 +37,7 @@ export const validateUser =  createAsyncThunk(
             return res.data
         } catch(error: any) {
             console.log("ERROR: ", error)
-            return thunkApi.rejectWithValue(error.message);
+            return thunkApi.rejectWithValue(error.response.data);
         }
     }
 )
@@ -53,11 +53,6 @@ const userSlice = createSlice({
         logoutUser() {
             return initialState;
         },
-    },
-    extraReducers: (builder) => {
-        builder.addCase(validateUser.fulfilled, (state: UserState, action: PayloadAction<any>) => {
-            return action.payload;
-        })
     },
 })
 

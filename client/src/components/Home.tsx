@@ -2,69 +2,86 @@ import Spline from '@splinetool/react-spline';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser, validateUser} from '../reducers/user'; 
-import { useGoogleOneTapLogin } from 'react-google-one-tap-login';
 import jwt_decode from "jwt-decode";
 
 
 let clientID: string = String(process.env.REACT_APP_CLIENT_ID);
 
-interface Credentials {
-    clientId: string,
-    client_id: string,
-    credential: string,
-    user: string
-}
-
 /* TODO: 
     - Add logout + remove cookie + remove g_state
 */
-export default function Home({notify, cookies, setCookie, removeCookie, dispatch }: any) {
+export default function Home({notify, cookies, setCookie, removeCookie, dispatch, ref}: any) {
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if ('credentials' in cookies) {
-            const token: any = jwt_decode(cookies.credentials);
-            dispatch(loginUser({name: token.name, email: token.email,
-                given_name: token.given_name, isLogged: true}));
-            notify(`🦄 Welcome back!`)
-            navigate('map')
-        }
-        else if ('g_state' in cookies) {removeCookie('g_state', {path: '/'}) };
-    })
-    
-    const callback = async (response: Credentials) => {
-        if (response && 'credential' in response){
-            const token: any = jwt_decode(response.credential);
-            setCookie('credentials', response.credential, { path: '/'});
-            dispatch(loginUser({name: token.name, email: token.email,
-                given_name: token.given_name, isLogged: true}));
-            
-            //Validate google credentials in backend
-            const serverToken = await dispatch(validateUser(response.credential));
-            
-            if("token" in serverToken.data){
-                setCookie('jwt-token', serverToken.data.token, {path: '/'});
-                notify(`🦄 Welcome ${token.name}!`)
-                navigate('/map');
-            } else {
-                notify.error('Error Validating google credentials');
-            }
+    const validateGoogleToken = async(gToken: string) => {
+        const serverToken = await dispatch(validateUser(gToken));
+        console.log(serverToken);
 
+        if(serverToken.payload && typeof(serverToken.payload) === 'object' && 'token' in serverToken.payload){
+            const name: string = setUserInfo(gToken);
+            setCookie('jwt-token', serverToken.payload.token, {path: '/'});
+            notify(`🦄 Welcome ${name}!`)
+            navigate('/map');
         } else {
-            notify.error('Login Error!');
+            //google credentials have expired and user must sign in again
+            notify('Google credentials have expired');
+            removeCookie('credentials', {path: '/'});
+            removeCookie('g_state', {path: '/'}) 
         }
     }
-    
-    useGoogleOneTapLogin({
-        onError: error => console.log(error),
-        googleAccountConfigs: {
-            client_id: clientID,
-            callback: callback
-        },
-    }); 
 
-    return (
+    const setUserInfo = (credentials: string) => {
+        //decodes the google credential once validated and updates user state
+        const token: any = jwt_decode(credentials);
+        setCookie('credentials', credentials, { path: '/'});
+        dispatch(loginUser({name: token.name, email: token.email,
+            given_name: token.given_name, isLogged: true}));
+
+        return token.name
+    }
+
+    // const fallbackLogin = () => {
+    //     //See if google prompt is in 
+    //     window.google.accounts.id.prompt((notification: any) => {
+    //         if(notification.isNotDisplayed() || !notification.isDisplayed()) {
+    //             // @ts-ignore
+    //             const buttonDiv = window.document.createElement("div")
+    //             buttonDiv.setAttribute("id", "googleLoginBtn")
+    //             document.getElementsByTagName('body')[0].appendChild(buttonDiv);
+    //             // @ts-ignore
+    //             window.google.accounts.id.renderButton(
+    //                 document.getElementById("googleLoginBtn"),
+    //                 { theme: "outline", size: "large" }  // customization attributes
+    //             );
+    //         }
+    //     })
+    // }
    
-            <Spline scene="https://prod.spline.design/FxfNdLxC2I8o3LF1/scene.splinecode"/>
+    const callback = async (response: any) => {
+        if (response && 'credential' in response){
+            //Validate google credentials in backend
+            validateGoogleToken(response.credential);
+
+        } else {
+            notify.error('Google Login Error!');
+        }
+    }
+    useEffect(() => {
+        if ('credentials' in cookies) {
+            validateGoogleToken(cookies.credentials);
+        }
+        else {
+            //initialize google client - Make it global
+            /* global google */
+            google.accounts.id.initialize({
+                client_id: clientID,
+                callback: callback
+            })
+            //Prompt the google one tap login to appear
+            google.accounts.id.prompt();
+        }
+    }, [])
+    return (
+        <Spline scene="https://prod.spline.design/FxfNdLxC2I8o3LF1/scene.splinecode"/>
     );
 }

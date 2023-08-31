@@ -1,7 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { configureStore } from '@reduxjs/toolkit';
 import { ChakraProvider } from '@chakra-ui/provider';
-import { CSSReset, extendTheme } from '@chakra-ui/react'
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore, 
   FLUSH,
@@ -15,7 +14,6 @@ import persistedReducer from './store';
 import { Provider } from 'react-redux';
 import './index.css';
 import App from './App';
-import { mode } from '@chakra-ui/theme-tools';
 
 const store: any = configureStore({
   reducer:persistedReducer,
@@ -30,6 +28,7 @@ const persistor: any= persistStore(store);
 
 const rootElement = document.getElementById('root')!;
 const root = createRoot(rootElement);
+
 root.render(
     <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>

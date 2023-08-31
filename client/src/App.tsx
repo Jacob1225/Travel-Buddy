@@ -4,8 +4,9 @@ import { CookiesProvider, useCookies} from 'react-cookie';
 import { useDispatch } from 'react-redux';
 import Home from './components/Home';
 import Map from './components/Map';
-import { ChakraProvider } from '@chakra-ui/react'
 import 'react-toastify/dist/ReactToastify.css';
+import { ChakraProvider } from '@chakra-ui/provider';
+import SearchBar from './components/SearchBar';
 
 export default function App() {
   const [cookies, setCookie, removeCookie] = useCookies(['credentials', 'g_state']);
@@ -16,18 +17,17 @@ export default function App() {
     autoClose: 3000,
     hideProgressBar: false,
     closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+    pauseOnHover: false,
+    draggable: false,
     progress: undefined,
     theme: "light",
   });
-
+  
   return (
-  <ChakraProvider>
     <CookiesProvider>
       <Router>
         <Routes>
-          <Route path="/" element={ <Home 
+          <Route path="/" element={ <Home
             notify={notify}
             dispatch={dispatch}
             cookies={cookies}
@@ -40,10 +40,12 @@ export default function App() {
             notify={notify}
             removeCookie={removeCookie}
           /> }/>
+          <Route path="/test" element={ <SearchBar 
+            isLoaded={false} dispatch={dispatch} notify={notify} mapState={{}}
+          /> }/>
         </Routes>
       </Router>
       <ToastContainer/>
       </CookiesProvider>
-    </ChakraProvider>
   );
 }
