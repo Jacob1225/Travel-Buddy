@@ -7,12 +7,9 @@ import jwt_decode from "jwt-decode";
 
 let clientID: string = String(process.env.REACT_APP_CLIENT_ID);
 
-/* TODO: 
-    - Add logout + remove cookie + remove g_state
-*/
 export default function Home({notify, cookies, setCookie, removeCookie, dispatch, ref}: any) {
     const navigate = useNavigate();
-
+    
     const validateGoogleToken = async(gToken: string) => {
         const serverToken = await dispatch(validateUser(gToken));
         console.log(serverToken);
@@ -40,22 +37,25 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
         return token.name
     }
 
-    // const fallbackLogin = () => {
-    //     //See if google prompt is in 
-    //     window.google.accounts.id.prompt((notification: any) => {
-    //         if(notification.isNotDisplayed() || !notification.isDisplayed()) {
-    //             // @ts-ignore
-    //             const buttonDiv = window.document.createElement("div")
-    //             buttonDiv.setAttribute("id", "googleLoginBtn")
-    //             document.getElementsByTagName('body')[0].appendChild(buttonDiv);
-    //             // @ts-ignore
-    //             window.google.accounts.id.renderButton(
-    //                 document.getElementById("googleLoginBtn"),
-    //                 { theme: "outline", size: "large" }  // customization attributes
-    //             );
-    //         }
-    //     })
-    // }
+    const loginWithFallback = () => {
+        //See if google prompt is displayed
+        window.google.accounts.id.prompt((notification: any) => {
+            if(!notification.h || notification.j === "suppressed_by_user") {
+                // @ts-ignore - render google button
+                const buttonDiv = window.document.createElement("div")
+                buttonDiv.setAttribute("id", "googleLoginBtn")
+                buttonDiv.style.position = "absolute";
+                buttonDiv.style.bottom = "50px";
+                buttonDiv.style.right = "80px";
+                document.getElementsByTagName('body')[0].appendChild(buttonDiv);
+                // @ts-ignore
+                window.google.accounts.id.renderButton(
+                    document.getElementById("googleLoginBtn")!,
+                    { type: "standard", theme: "outline", size: "large" }  // customization attributes
+                );
+            }
+        })
+    }
    
     const callback = async (response: any) => {
         if (response && 'credential' in response){
@@ -77,8 +77,8 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
                 client_id: clientID,
                 callback: callback
             })
-            //Prompt the google one tap login to appear
-            window.google.accounts.id.prompt();
+            //Prompt user to login
+            loginWithFallback();
         }
     }, [])
     return (

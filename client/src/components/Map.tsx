@@ -19,15 +19,6 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         libraries
     })
 
-    /*
-    TODO: 
-    1- Add bus vehicle positions when map loads with info window of bus information
-    2- Add hide vehicles button
-    3- Add Icon on bus markers
-    4- Add button to center map else where
-    5- Add slider for radius of stops and vehicles displayed
-    */ 
-    
     //map & marker & visibility state
     const [map, setMap] = useState(null)
     const [activeMarker, setActiveMarker] = useState({id: "", routeID: ""});
@@ -80,6 +71,11 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         setActiveMarker({id: "", routeID: ""});
     }
 
+    const removeSignInButton = () =>{
+        const googleBtn = document.getElementById("googleLoginBtn");
+        googleBtn?.remove();
+    }
+
     const getNearestArrivalTime = (times: any) => {
         let result: string[] = [];
         const currentTime = new Date().toLocaleString('en-US', {timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: true});
@@ -101,6 +97,8 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
     }
 
     useEffect(() => {
+        removeSignInButton();
+         
         if (!cookies.credentials) {
             navigate("/");
             return;
