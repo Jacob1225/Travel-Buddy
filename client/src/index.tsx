@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { configureStore } from '@reduxjs/toolkit';
-import { ChakraProvider } from '@chakra-ui/provider';
+import { ChakraProvider } from '@chakra-ui/react';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore, 
   FLUSH,

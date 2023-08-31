@@ -73,12 +73,12 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
         else {
             //initialize google client - Make it global
             /* global google */
-            google.accounts.id.initialize({
+            window.google.accounts.id.initialize({
                 client_id: clientID,
                 callback: callback
             })
             //Prompt the google one tap login to appear
-            google.accounts.id.prompt();
+            window.google.accounts.id.prompt();
         }
     }, [])
     return (

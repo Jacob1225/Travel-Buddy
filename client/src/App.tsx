@@ -5,8 +5,6 @@ import { useDispatch } from 'react-redux';
 import Home from './components/Home';
 import Map from './components/Map';
 import 'react-toastify/dist/ReactToastify.css';
-import { ChakraProvider } from '@chakra-ui/provider';
-import SearchBar from './components/SearchBar';
 
 export default function App() {
   const [cookies, setCookie, removeCookie] = useCookies(['credentials', 'g_state']);
@@ -39,9 +37,6 @@ export default function App() {
             dispatch={dispatch}
             notify={notify}
             removeCookie={removeCookie}
-          /> }/>
-          <Route path="/test" element={ <SearchBar 
-            isLoaded={false} dispatch={dispatch} notify={notify} mapState={{}}
           /> }/>
         </Routes>
       </Router>
