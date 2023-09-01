@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Box, Heading, Stack, Flex } from '@chakra-ui/react'
-import { getMemoizedMap, setCurrentLocation, getStops, getVehicles, getTransitLines } from '../reducers/map';
+import { getMemoizedMap, setCurrentLocation, getStops, getVehicles, getTransitLines, setInitNotify } from '../reducers/map';
 import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, DirectionsRenderer, Polyline} from '@react-google-maps/api';
 import Spinner from './Spinner';
 import SearchBar from './SearchBar';
@@ -25,6 +25,8 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
     const [stopVisible, setStopVisible] = useState(true);
     const [busVisible, setBusVisible] = useState(true);
     const [center, setCenter] = useState({lat: 0, lng: 0})
+    const [busNotified, setBusNotified] = useState(false);
+    const [stopsNotified, setStopsNotified] = useState(false);
 
     const navigate = useNavigate();
     let mapState = useSelector(getMemoizedMap);
@@ -98,13 +100,22 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
 
     useEffect(() => {
         removeSignInButton();
-         
-        if (!cookies.credentials) {
+        console.log('map: ', mapState);
+        if (!cookies.jwt_token) {
             navigate("/");
             return;
         }
-        if (mapState && mapState.static_stops.length === 0 && mapState.vehicles.length === 0) {
+        if (mapState && mapState.static_stops.length === 0 && mapState.vehicles.length === 0 && !mapState.initNotify) {
+            dispatch(setInitNotify(true));
             notify('🦄 Stops & Buses are loading!');
+        }
+        if (mapState && mapState.stopsLoaded && !stopsNotified) {
+            setStopsNotified(true);
+            notify('🦄 Bus Stops have loaded!');
+        }
+        if (mapState && mapState.vehiclesLoaded && !busNotified) {
+            setBusNotified(true);
+            notify('🦄 Bus Positions have loaded!');
         }
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(locationSuccess, locationError);
@@ -113,16 +124,13 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         /* Fetch stops & vehicles only if no stops/vehicles in state
             Will fetch on refresh as size of data is too large to be persisted 
         */
-        if (mapState && mapState.static_stops.length === 0) {
-           dispatch(getStops(cookies.jwt_token)) 
-        }
-        if (mapState && mapState.vehicles.length === 0) {
-            dispatch(getVehicles(cookies.jwt_token));
-        }
-        if (mapState && mapState.transitLines.length === 0) {
-            dispatch(getTransitLines(cookies.jwt_token))
-        }
-    }, [])
+        if (mapState && !mapState.stopsLoading && !mapState.stopsLoaded) dispatch(getStops(cookies.jwt_token)) 
+        
+        if (mapState && !mapState.vehiclesLoaded && !mapState.vehiclesLoading) dispatch(getVehicles(cookies.jwt_token));
+        
+        if (mapState && !mapState.linesLoaded && !mapState.lines) dispatch(getTransitLines(cookies.jwt_token))
+
+    }, [cookies, mapState.stopsLoaded, mapState.vehiclesLoading])
 
     return(
         <Flex 

@@ -13,7 +13,17 @@ const persistConfig: any = {
   const mapPersistConfig = {
     key: 'map',
     storage: storage,
-    blacklist: ['static_stops', 'vehicles', 'transitLines']
+    blacklist: [
+      'static_stops',
+      'vehicles', 
+      'transitLines', 
+      'stopsLoaded', 
+      'vehiclesLoaded', 
+      'linesLoaded', 
+      'initNotify',
+      'stopsLoading',
+      'vehiclesLoading'
+    ]
   };
   
 const rootReducer = combineReducers({

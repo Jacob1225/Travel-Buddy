@@ -1,5 +1,7 @@
+import { assertCompletionStatement } from '@babel/types';
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { FaLessThanEqual } from 'react-icons/fa';
 import { createSelector } from 'reselect';
 
 export interface requestData {
@@ -20,9 +22,13 @@ export interface MapState {
     directions: any,
     distance: string,
     eta: string,
+    initNotify: boolean,
     stopsLoading: boolean,
+    stopsLoaded: boolean,
     vehiclesLoading: boolean,
+    vehiclesLoaded: boolean,
     linesLoading: boolean
+    linesLoaded: boolean
     static_stops: any[],
     vehicles: any[],
     transitLines: any[],
@@ -40,9 +46,13 @@ const initialState = {
     directions: null,
     distance: "",
     eta: "",
+    initNotify: false,
+    stopsLoaded: false,
     stopsLoading: false,
     vehiclesLoading: false,
-    linesLoading: false,
+    vehiclesLoaded: false,
+    linesLoading:false,
+    linesLoaded: false,
     static_stops: [],
     vehicles: [],
     transitLines: []
@@ -65,6 +75,7 @@ export const getStops =  createAsyncThunk(
                     "Content-Type": "application/json"
                 }
             })
+            console.log(res)
             return res.data
         } catch(error: any) {
             console.log(error)
@@ -125,6 +136,12 @@ const mapSlice = createSlice({
     name: "map",
     initialState,
     reducers: {
+        setInitNotify(state: any, action: PayloadAction<any>) {
+            return {
+                ...state,
+                initNotify: action.payload
+            }
+        },
         setCurrentLocation(state: any, action: PayloadAction<any>) {
             return {...state,
                 currentLatitude: action.payload.currentLatitude,
@@ -161,7 +178,7 @@ const mapSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        builder.addCase(getStops.pending, (state: MapState) => {
+        builder.addCase(getStops.pending, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
                 stopsLoading: true,
@@ -171,17 +188,18 @@ const mapSlice = createSlice({
             return {
                 ...state,
                 stopsLoading: false,
+                stopsLoaded: true,
                 static_stops: action.payload.data
             }
         })
-        builder.addCase(getStops.rejected, (state: MapState) => {
+        builder.addCase(getStops.rejected, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
-                stopsLoading: false
+                stopsLoading: false,
+                static_stops: action.payload.data
             }
-            //TODO: add error message in state to notify front end 
         })
-        builder.addCase(getVehicles.pending, (state: MapState) => {
+        builder.addCase(getVehicles.pending, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
                 vehiclesLoading: true,
@@ -191,16 +209,17 @@ const mapSlice = createSlice({
             return {
                 ...state,
                 vehiclesLoading: false,
+                vehiclesLoaded: true,
                 vehicles: action.payload.data
             }
         })
-        builder.addCase(getVehicles.rejected, (state: MapState) => {
+        builder.addCase(getVehicles.rejected, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
-                vehiclesLoading: false
+                vehiclesLoading: false,
             }
         })
-        builder.addCase(getTransitLines.pending, (state: MapState) => {
+        builder.addCase(getTransitLines.pending, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
                 linesLoading: true,
@@ -210,19 +229,20 @@ const mapSlice = createSlice({
             return {
                 ...state,
                 linesLoading: false,
+                linesLoaded: true,
                 transitLines: action.payload.data
             }
         })
-        builder.addCase(getTransitLines.rejected, (state: MapState) => {
+        builder.addCase(getTransitLines.rejected, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
-                linesLoading: false
+                linesLoading: false,
             }
         })
     },
 })
 
-export const { setCurrentLocation, setRoute, clearLocation} = mapSlice.actions;
+export const { setCurrentLocation, setRoute, clearLocation, setInitNotify} = mapSlice.actions;
 export default mapSlice.reducer;
 
 export const getMemoizedMap = createSelector(
