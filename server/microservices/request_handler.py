@@ -66,7 +66,13 @@ def request_handler(request):
             # google credentials valid and jwt is being used
             new_jwt = authenticator.validate_token(request.headers["Authorization"])
 
-        res = requests.post(url=target_url, json=payload, headers=request.headers)
+        # Refresh jwt token in headers if expired
+        inner_headers = {
+            "Authorization": new_jwt if new_jwt else request.headers["Authorization"],
+            "Content-Type": "application/json",
+        }
+
+        res = requests.post(url=target_url, json=payload, headers=inner_headers)
         response = res.json()
         if new_jwt:
             response["new_token"] = new_jwt

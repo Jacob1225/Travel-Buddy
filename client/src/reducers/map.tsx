@@ -50,42 +50,72 @@ const initialState = {
 
 /* Fetch data async */
 export const getStops =  createAsyncThunk(
-    'map/getRoute',
-    async(data, thunkApi) => {
+    'map/getStops',
+    async(data: string, thunkApi) => {
         try{
-            const res = await axios.post(`${process.env.REACT_APP_DEV_URL}`, {})
-            console.log(res)
+            const payload = {
+                "target_name": "get stops",
+                "target_url": `${process.env.REACT_APP_DEV_URL_STOPS}`
+            }
+
+            const res = await axios.post(`${process.env.REACT_APP_DEV_API_URL}`, payload,
+            {
+                headers: {
+                    "Authorization": data!,
+                    "Content-Type": "application/json"
+                }
+            })
             return res.data
         } catch(error: any) {
-            console.log(error.message)
-            return thunkApi.rejectWithValue(error.message);
+            console.log(error)
+            return thunkApi.rejectWithValue(error.response.data);
         }
     }
 )
-export const getVehicles =  createAsyncThunk(
+export const getVehicles = createAsyncThunk(
     'map/getVehicles',
-    async(data, thunkApi) => {
+    async(data: string, thunkApi) => {
         try{
-            const res = await axios.post(`${process.env.REACT_APP_DEV_URL_VEHICLES}`, {})
-            console.log(res)
+            const payload = {
+                "target_name": "get vehicles",
+                "target_url": `${process.env.REACT_APP_DEV_URL_VEHICLES}`
+            }
+
+            const res = await axios.post(`${process.env.REACT_APP_DEV_API_URL}`, payload,
+            {
+                headers: {
+                    "Authorization": data!,
+                    "Content-Type": "application/json"
+                }
+            })
             return res.data
         } catch(error: any) {
-            console.log(error.message)
-            return thunkApi.rejectWithValue(error.message);
+            console.log(error)
+            return thunkApi.rejectWithValue(error.response.data);
         }
     }
 )
 
 export const getTransitLines =  createAsyncThunk(
     'map/getTransitLines',
-    async(data, thunkApi) => {
+    async(data: string, thunkApi) => {
         try{
-            const res = await axios.post(`${process.env.REACT_APP_DEV_URL_LINES}`, {})
-            console.log(res)
+            const payload = {
+                "target_name": "get transit lines",
+                "target_url": `${process.env.REACT_APP_DEV_URL_LINES}`
+            }
+
+            const res = await axios.post(`${process.env.REACT_APP_DEV_API_URL}`, payload,
+            {
+                headers: {
+                    "Authorization": data!,
+                    "Content-Type": "application/json"
+                }
+            })
             return res.data
         } catch(error: any) {
-            console.log(error.message)
-            return thunkApi.rejectWithValue(error.message);
+            console.log(error)
+            return thunkApi.rejectWithValue(error.response.data);
         }
     }
 )

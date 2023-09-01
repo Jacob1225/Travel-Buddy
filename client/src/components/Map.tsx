@@ -114,15 +114,15 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
             Will fetch on refresh as size of data is too large to be persisted 
         */
         if (mapState && mapState.static_stops.length === 0) {
-            dispatch(getStops()) 
+           dispatch(getStops(cookies.jwt_token)) 
         }
         if (mapState && mapState.vehicles.length === 0) {
-            dispatch(getVehicles());
+            dispatch(getVehicles(cookies.jwt_token));
         }
         if (mapState && mapState.transitLines.length === 0) {
-            dispatch(getTransitLines())
+            dispatch(getTransitLines(cookies.jwt_token))
         }
-    }, [dispatch, cookies.credentials])
+    }, [])
 
     return(
         <Flex 
@@ -148,7 +148,8 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                     >
                         {mapState.transitLines.map((line: any, index: number) => {
                             return (
-                                <Polyline key={index} 
+                                <Polyline 
+                                    key={index} 
                                     path={line.sequence} 
                                     visible={(activeMarker.routeID).toString() === (line.route_id).toString() ? true : false}
                                     options={{strokeColor:`#${line.route_color}`, strokeOpacity:2.0, strokeWeight:5}}/>)
@@ -177,9 +178,11 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                                             <Box><Heading size='xs'>Route Name:</Heading> {stop.route_long_name}</Box>
                                             <Flex flexDirection='column'>
                                                 <Heading size='xs'>Next Arrival Times:</Heading> 
-                                                {getNearestArrivalTime(stop.arrival_time).map((time: string) => {
-                                                    return (<Box>{time}</Box>)
-                                                })}
+                                                {getNearestArrivalTime(stop.arrival_time).length > 0 ? 
+                                                    getNearestArrivalTime(stop.arrival_time).map((time: string, index: number) => {
+                                                        return (<Box key={index}>{time}</Box>)
+                                                    })
+                                                : <Box>No arrivals for next 10 mins</Box>}
                                             </Flex>
                                             <Box><Heading size='xs'>Stop Type:</Heading> {stop.route_type === 1 ? 'Metro': 'Bus'}</Box>
                                         </Stack>
@@ -213,7 +216,6 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                                             <Box><Heading size='xs'>Occupancy level:</Heading> {OCCUPANCYMAPPING[vehicle.occupancy_status]}</Box>
                                             <Box><Heading size='xs'>Current Speed:</Heading> {parseFloat(vehicle.speed).toFixed(2).toString()} km/h</Box>
                                             <Box><Heading size='xs'>Last Updated At:</Heading> {convertTimestamp(vehicle.timestamp)}</Box>
-                                            <Box><Heading size='xs'>Index:</Heading> {index}</Box>
                                         </Stack>
                                     </InfoWindow>
                                 ) : null}

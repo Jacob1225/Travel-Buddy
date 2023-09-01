@@ -8,6 +8,7 @@ export default function Logout({removeCookie, dispatch, notify}: {removeCookie: 
     const logout = () => {
         dispatch(logoutUser());
         removeCookie('credentials', {path: '/'});
+        removeCookie('jwt_token', {path: '/'});
         notify('Logout Successful!');
     }
 

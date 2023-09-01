@@ -13,7 +13,6 @@ authenticator = Authenticator()
 
 
 def authenticate_user(request):
-    print(request.headers)
     try:
         credentials = authenticator.validate_google_credentials(request.headers["Authorization"])
         return ({"message": "User authentication successful", "token": credentials}, 200)

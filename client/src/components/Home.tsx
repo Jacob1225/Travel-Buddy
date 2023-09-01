@@ -16,7 +16,7 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
 
         if(serverToken.payload && typeof(serverToken.payload) === 'object' && 'token' in serverToken.payload){
             const name: string = setUserInfo(gToken);
-            setCookie('jwt-token', serverToken.payload.token, {path: '/'});
+            setCookie('jwt_token', serverToken.payload.token, {path: '/'});
             notify(`🦄 Welcome ${name}!`)
             navigate('/map');
         } else {
