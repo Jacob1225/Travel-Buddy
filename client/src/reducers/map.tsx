@@ -1,7 +1,5 @@
-import { assertCompletionStatement } from '@babel/types';
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { FaLessThanEqual } from 'react-icons/fa';
 import { createSelector } from 'reselect';
 
 export interface requestData {
@@ -24,9 +22,12 @@ export interface MapState {
     eta: string,
     initNotify: boolean,
     stopsLoading: boolean,
+    stopsError: boolean,
     stopsLoaded: boolean,
+    vehiclesError: boolean,
     vehiclesLoading: boolean,
     vehiclesLoaded: boolean,
+    linesError: boolean,
     linesLoading: boolean
     linesLoaded: boolean
     static_stops: any[],
@@ -48,9 +49,12 @@ const initialState = {
     eta: "",
     initNotify: false,
     stopsLoaded: false,
+    stopsError: false,
     stopsLoading: false,
     vehiclesLoading: false,
+    vehiclesError: false,
     vehiclesLoaded: false,
+    linesError: false,
     linesLoading:false,
     linesLoaded: false,
     static_stops: [],
@@ -75,7 +79,6 @@ export const getStops =  createAsyncThunk(
                     "Content-Type": "application/json"
                 }
             })
-            console.log(res)
             return res.data
         } catch(error: any) {
             console.log(error)
@@ -181,6 +184,7 @@ const mapSlice = createSlice({
         builder.addCase(getStops.pending, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
+                stopsError: false,
                 stopsLoading: true,
             }
         })
@@ -195,6 +199,7 @@ const mapSlice = createSlice({
         builder.addCase(getStops.rejected, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
+                stopsError: true,
                 stopsLoading: false,
                 static_stops: action.payload.data
             }
@@ -202,6 +207,7 @@ const mapSlice = createSlice({
         builder.addCase(getVehicles.pending, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
+                vehiclesError: false,
                 vehiclesLoading: true,
             }
         })
@@ -216,12 +222,14 @@ const mapSlice = createSlice({
         builder.addCase(getVehicles.rejected, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
+                vehiclesError: true,
                 vehiclesLoading: false,
             }
         })
         builder.addCase(getTransitLines.pending, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
+                linesError: false,
                 linesLoading: true,
             }
         })
@@ -236,6 +244,7 @@ const mapSlice = createSlice({
         builder.addCase(getTransitLines.rejected, (state: MapState, action: PayloadAction<any>) => {
             return {
                 ...state,
+                linesError: true,
                 linesLoading: false,
             }
         })

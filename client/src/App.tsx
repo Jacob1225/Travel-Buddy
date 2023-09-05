@@ -12,7 +12,8 @@ export default function App() {
 
   const notify = (notification: string) => toast(notification, {
     position: "top-right",
-    autoClose: 3000,
+    toastId: "success",
+    autoClose: 1500,
     hideProgressBar: false,
     closeOnClick: true,
     pauseOnHover: false,

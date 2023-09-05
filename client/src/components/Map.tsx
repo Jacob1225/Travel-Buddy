@@ -44,10 +44,15 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
     }
 
     const locationError = (error: any) => {
-        console.log('Cannot get user location ', error);
+        console.log(error)
+        notify('Cannot get user location!');
     } 
-
-    const handleActiveMarker = (markerID: string, routeID: string, lat: number, lng: number) => {
+    
+    const handleActiveMarker = (vehicleMarker: boolean, markerID: string, routeID: string, lat: number, lng: number, lastUpdate: string) => {
+        window.event!.preventDefault();
+        if (vehicleMarker) {
+            checkRefreshTimer(lastUpdate);
+        }
         if (markerID === activeMarker.id) {
           return;
         }
@@ -78,14 +83,20 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         googleBtn?.remove();
     }
 
-    const getNearestArrivalTime = (times: any) => {
-        let result: string[] = [];
+    const getCurrentTime = () => {
         const currentTime = new Date().toLocaleString('en-US', {timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: true});
         const splitTime = currentTime.split(':');
         let currHour = Number(splitTime[0]);
         let currMin = Number(splitTime[1].split(" ")[0]);
         const amPm = splitTime[1][splitTime[1].length - 2];
         if (amPm === 'P') currHour += 12; 
+
+        return {currHour, currMin}
+    }
+
+    const getNearestArrivalTime = (times: any) => {
+        let result: string[] = [];
+        const {currHour, currMin} = getCurrentTime();
 
         for (const hour of times) {
             const fSplit = hour.split(":");
@@ -98,9 +109,33 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         return result;
     }
 
+    const refreshBuses = () => {
+        if (mapState && mapState.vehiclesLoading) {
+            notify("Buses are already loading!");
+            return;
+        } else if (mapState && !mapState.vehiclesLoading) {
+            notify("Reloading Buses!");
+            dispatch(getVehicles(cookies.jwt_token));
+        }
+    }
+
+    const checkRefreshTimer = (lastUpdate: string) => {
+        const {currHour, currMin} = getCurrentTime();
+        const fSplit = lastUpdate.split(":");
+        let fHour = Number(fSplit[0]);
+        const splitMin = fSplit[1].split(" ");
+        const fMin = Number(splitMin[0]);
+        const amPm = splitMin[1][0];
+        if (amPm === 'P') {fHour += 12};
+        
+        //If more than 3 mins since last update refresh buses
+        if (fHour <= currHour && Math.abs(currMin - fMin) > 1){
+            notify("Bus Positions should be refreshed!");
+        }
+    }
+
     useEffect(() => {
         removeSignInButton();
-        console.log('map: ', mapState);
         if (!cookies.jwt_token) {
             navigate("/");
             return;
@@ -112,7 +147,8 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         if (mapState && mapState.stopsLoaded && !stopsNotified) {
             setStopsNotified(true);
             notify('🦄 Bus Stops have loaded!');
-        }
+
+        } else if (mapState && !mapState.stopsLoaded)
         if (mapState && mapState.vehiclesLoaded && !busNotified) {
             setBusNotified(true);
             notify('🦄 Bus Positions have loaded!');
@@ -124,11 +160,21 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         /* Fetch stops & vehicles only if no stops/vehicles in state
             Will fetch on refresh as size of data is too large to be persisted 
         */
-        if (mapState && !mapState.stopsLoading && !mapState.stopsLoaded) dispatch(getStops(cookies.jwt_token)) 
-        
-        if (mapState && !mapState.vehiclesLoaded && !mapState.vehiclesLoading) dispatch(getVehicles(cookies.jwt_token));
-        
-        if (mapState && !mapState.linesLoaded && !mapState.lines) dispatch(getTransitLines(cookies.jwt_token))
+        if (mapState && !mapState.stopsLoading && !mapState.stopsLoaded) {
+            dispatch(getStops(cookies.jwt_token));
+        } else if (mapState && mapState.stopsError){
+            notify("⚠️Error Loading Bus Stops - Try Refreshing!⚠️");
+        }
+        if (mapState && !mapState.vehiclesLoaded && !mapState.vehiclesLoading){
+            dispatch(getVehicles(cookies.jwt_token));
+        } else if (mapState && mapState.vehiclesError) {
+            notify("⚠️Error Loading Buses! - Try Refreshing!⚠️");
+        }
+        if (mapState && !mapState.linesLoaded && !mapState.lines){
+            dispatch(getTransitLines(cookies.jwt_token));
+        } else if (mapState && mapState.linesError) {
+            notify("⚠️Error Loading Bus Tranist Lines - Try Refreshing!⚠️");
+        }
 
     }, [cookies, mapState.stopsLoaded, mapState.vehiclesLoading])
 
@@ -173,7 +219,16 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                             <MarkerF 
                                 key={index} position={{lat: stop.stop_lat, lng: stop.stop_lon}}
                                 visible={(stopVisible && activeMarker.id === "") || (activeMarker.id !== "" && (activeMarker.routeID).toString() === (stop.route_id).toString())} 
-                                onClick={() => handleActiveMarker(stop.stop_id, stop.route_id, stop.stop_lat, stop.stop_lon)}
+                                onClick={() => 
+                                    handleActiveMarker(
+                                        false,
+                                        stop.stop_id,
+                                        stop.route_id,
+                                        stop.stop_lat,
+                                        stop.stop_lon,
+                                        ""
+                                    )
+                                }
                             >
                                 {activeMarker.id === stop.stop_id ? (
                                     <InfoWindow onCloseClick={() => {
@@ -201,10 +256,20 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                         {mapState.vehicles.length > 0 && mapState.vehicles.map((vehicle: any, index: number) => {
                             return (
                                 <MarkerF 
-                                    key={index} position={{lat: vehicle.latitude, lng: vehicle.longitude}}
+                                    key={index} 
+                                    position={{lat: vehicle.latitude, lng: vehicle.longitude}}
                                     icon={{url: require('../assets/bus-svgrepo-com.svg').default}}
                                     visible={(busVisible && activeMarker.id === "") || (activeMarker.id !== "" && (activeMarker.routeID).toString() === (vehicle.route_id).toString())}
-                                    onClick={() => handleActiveMarker(vehicle.vehicle_id, vehicle.route_id, vehicle.latitude, vehicle.longitude)}
+                                    onClick={() =>
+                                        handleActiveMarker(
+                                            true, 
+                                            vehicle.vehicle_id, 
+                                            vehicle.route_id, 
+                                            vehicle.latitude, 
+                                            vehicle.longitude, 
+                                            convertTimestamp(vehicle.timestamp)
+                                        )
+                                    }
                                 >
                                 {activeMarker.id === vehicle.vehicle_id ? (
                                     <InfoWindow onCloseClick={() => {
@@ -242,6 +307,7 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                 showMarkers={showMarkers}
                 stopVisible={stopVisible}
                 busVisible={busVisible}
+                refreshBuses={refreshBuses}
             />
             <Logout removeCookie={removeCookie} dispatch={dispatch} notify={notify}/>
         </Flex>

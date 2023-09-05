@@ -1,12 +1,13 @@
 import { Flex, IconButton, Tooltip} from '@chakra-ui/react'
 import { FaLocationArrow } from 'react-icons/fa'
+import { FiRefreshCw } from 'react-icons/fi';
 import { BiSolidHide, BiSolidShow } from 'react-icons/bi'
 import { FaBusAlt } from 'react-icons/fa';
 
 
 export default function OptionsMenu(
-    {clickCenterMap, hideMarkers, showMarkers, stopVisible, busVisible, mapState}: 
-    {clickCenterMap: any, hideMarkers: any, showMarkers: any, stopVisible: boolean, busVisible: boolean, mapState: any}) 
+    {clickCenterMap, hideMarkers, showMarkers, stopVisible, busVisible, mapState, refreshBuses}: 
+    {clickCenterMap: any, hideMarkers: any, showMarkers: any, stopVisible: boolean, busVisible: boolean, mapState: any, refreshBuses:any}) 
 {
     
     return (
@@ -92,6 +93,19 @@ export default function OptionsMenu(
                     />
                 </Tooltip> 
                 }
+            <Tooltip label='Refresh Buses'>
+                <IconButton 
+                    bgColor='white'
+                    aria-label='Refresh Buses'
+                    icon={<FiRefreshCw />}
+                    size='md'
+                    width='10%'
+                    m='auto'
+                    mb='10px'
+                    mt='10px'
+                    onClick={() => refreshBuses()}
+                />
+            </Tooltip>
         </Flex>
     )
 }
