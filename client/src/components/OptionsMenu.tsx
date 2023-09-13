@@ -23,7 +23,8 @@ export default function OptionsMenu(
             zIndex='1'
         >
             <Tooltip label='Pan to current location'>
-                <IconButton 
+                <IconButton
+                    isDisabled={mapState.currentLatitude ? false : true}
                     bgColor='white'
                     aria-label='Pan current location'
                     icon={<FaLocationArrow />}

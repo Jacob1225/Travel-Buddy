@@ -69,16 +69,10 @@ export const getStops =  createAsyncThunk(
     'map/getStops',
     async(data: string, thunkApi) => {
         try{
-            // const timePayload = {
-            //     "target_name": "get times",
-            //     "target_url": `${process.env.REACT_APP_PROD_URL_TIMES}`
-            // }
             const payload = {
                 "target_name": "get stops",
                 "target_url": `${process.env.REACT_APP_PROD_URL_STOPS}`
             }
-
-            console.log(payload)
 
             const res = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, payload,
             {
@@ -88,14 +82,6 @@ export const getStops =  createAsyncThunk(
                 }
             })
             console.log(res)
-            // const timeRes = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, timePayload,
-            // {
-            //     headers: {
-            //         "Authorization": data!,
-            //         "Content-Type": "application/json"
-            //     }
-            // })
-            
             return res.data;
         } catch(error: any) {
             console.log(error)
@@ -291,12 +277,6 @@ const mapSlice = createSlice({
                 ...state,
                 linesError: true,
                 linesLoading: false,
-            }
-        })
-        builder.addCase(getTimes.fulfilled, (state: MapState, action: PayloadAction<any>) => {
-            return {
-                ...state,
-                times: action.payload.data
             }
         })
     },

@@ -139,7 +139,7 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
             notify("⚠️Error Loading Bus Tranist Lines - Try Refreshing!⚠️");
         }
 
-    }, [cookies, mapState.stopsLoaded, mapState.vehiclesLoading])
+    }, [cookies, mapState.stopsLoaded, mapState.vehiclesLoading, navigator])
 
     return(
         <Flex 

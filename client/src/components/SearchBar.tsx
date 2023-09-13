@@ -53,7 +53,14 @@ export default function SearchBar(
             return null;
         }
     }
-   
+    
+    const addressValidator = (address: string) => {
+        //check if address starts with a number add
+        const splitAdd = address.split(" ");
+        if (!Number(splitAdd[0])) return 0;
+        return 1
+    }
+
     const calculateRoute = async () => {
         if (originAddress.current?.value === '' || destAddress.current?.value === '') {
             setOriginError(true);
@@ -66,19 +73,21 @@ export default function SearchBar(
         const originCoords = await getCoordsFromAddress(originAddress.current?.value);
         const destCoords = await getCoordsFromAddress(destAddress.current?.value);
 
-        if (!originCoords) {
+        if (!originCoords || !addressValidator(originAddress.current?.value!)) {
             notify('🛑 Origin address is not a valid! 🛑');
             setOriginError(true);
             return;
         }
-        if (!destCoords) {
+        if (!destCoords || !addressValidator(destAddress.current?.value!)) {
             notify('🛑 Destination address is not a valid! 🛑');
             setDestError(true);
             return;
         }
+        
         setCalculating(true);
         const directionResults = await getDirections(originAddress.current?.value, destAddress.current?.value);
         if (!directionResults) {
+            setCalculating(false);
             return;
         }
         /*

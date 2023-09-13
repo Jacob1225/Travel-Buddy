@@ -39,7 +39,7 @@ export const getNearestArrivalTime = (times: any) => {
             if(!result.includes(hour)) result.push(hour);
         }
     }
-    return result;
+    return result.sort();
 }
 
 /* 

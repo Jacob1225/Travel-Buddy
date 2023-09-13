@@ -20,10 +20,11 @@ const persistConfig: any = {
       'stopsLoaded', 
       'vehiclesLoaded', 
       'linesLoaded', 
+      'linesLoading',
       'initNotify',
       'stopsLoading',
       'vehiclesLoading',
-      'times'
+      'times',
     ]
   };
   
