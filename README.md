@@ -16,7 +16,7 @@ Backend stack: Google cloud microservices in python
 
 Graphic Design: Spline for 3D Modeling & figma for UI/UX design
 
-##Project Deployment
+## Project Deployment
 
 This app has been deployed with netlify and can be viewed at: https://main--moonlit-gnome-9892b2.netlify.app/
 
