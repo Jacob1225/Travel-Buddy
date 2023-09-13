@@ -1,6 +1,7 @@
 gcsfs
 google-auth
 PyJWT
+python-dotenv
 pandas
 dacite
 requests

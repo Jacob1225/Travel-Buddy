@@ -39,7 +39,7 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
 
     const loginWithFallback = () => {
         //See if google prompt is displayed
-        window.google.accounts.id.prompt((notification: any) => {
+        google.accounts.id.prompt((notification: any) => {
             if(!notification.h || notification.j === "suppressed_by_user") {
                 // @ts-ignore - render google button
                 const buttonDiv = window.document.createElement("div")
@@ -49,7 +49,7 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
                 buttonDiv.style.right = "80px";
                 document.getElementsByTagName('body')[0].appendChild(buttonDiv);
                 // @ts-ignore
-                window.google.accounts.id.renderButton(
+                google.accounts.id.renderButton(
                     document.getElementById("googleLoginBtn")!,
                     { type: "standard", theme: "outline", size: "large" }  // customization attributes
                 );
@@ -73,7 +73,7 @@ export default function Home({notify, cookies, setCookie, removeCookie, dispatch
         else {
             //initialize google client - Make it global
             /* global google */
-            window.google.accounts.id.initialize({
+            google.accounts.id.initialize({
                 client_id: clientID,
                 callback: callback
             })

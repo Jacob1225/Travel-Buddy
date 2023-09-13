@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Box, Heading, Stack, Flex } from '@chakra-ui/react'
+import { convertTimestamp, getNearestArrivalTime, checkRefreshTimer } from '../utils/util';
 import { getMemoizedMap, setCurrentLocation, getStops, getVehicles, getTransitLines, setInitNotify } from '../reducers/map';
 import { useJsApiLoader, GoogleMap, MarkerF, InfoWindow, DirectionsRenderer, Polyline} from '@react-google-maps/api';
 import Spinner from './Spinner';
@@ -31,11 +32,6 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
     const navigate = useNavigate();
     let mapState = useSelector(getMemoizedMap);
 
-    const convertTimestamp = (timestamp: any) => {
-        const date = new Date(timestamp * 1000);
-        return date.toLocaleString('en-US', {hour: 'numeric', minute: 'numeric', hour12: true})
-    }
-
     const locationSuccess = (position: any) => {
         dispatch(setCurrentLocation({
             currentLatitude: position.coords.latitude,
@@ -48,10 +44,15 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         notify('Cannot get user location!');
     } 
     
+    const validateRefresh = (lastUpdate: string) => {
+        const refresh  = checkRefreshTimer(lastUpdate);
+        if (refresh) notify("Bus Positions should be refreshed!");
+        
+    }
     const handleActiveMarker = (vehicleMarker: boolean, markerID: string, routeID: string, lat: number, lng: number, lastUpdate: string) => {
         window.event!.preventDefault();
         if (vehicleMarker) {
-            checkRefreshTimer(lastUpdate);
+            validateRefresh(lastUpdate);
         }
         if (markerID === activeMarker.id) {
           return;
@@ -83,32 +84,6 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         googleBtn?.remove();
     }
 
-    const getCurrentTime = () => {
-        const currentTime = new Date().toLocaleString('en-US', {timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: true});
-        const splitTime = currentTime.split(':');
-        let currHour = Number(splitTime[0]);
-        let currMin = Number(splitTime[1].split(" ")[0]);
-        const amPm = splitTime[1][splitTime[1].length - 2];
-        if (amPm === 'P') currHour += 12; 
-
-        return {currHour, currMin}
-    }
-
-    const getNearestArrivalTime = (times: any) => {
-        let result: string[] = [];
-        const {currHour, currMin} = getCurrentTime();
-
-        for (const hour of times) {
-            const fSplit = hour.split(":");
-            const fHour = Number(fSplit[0]);
-            const fMin = Number(fSplit[1]);
-            if (fHour === currHour && (fMin >= currMin && fMin <= currMin + 10)) {
-                if(!result.includes(hour)) result.push(hour);
-            }
-        }
-        return result;
-    }
-
     const refreshBuses = () => {
         if (mapState && mapState.vehiclesLoading) {
             notify("Buses are already loading!");
@@ -116,21 +91,6 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         } else if (mapState && !mapState.vehiclesLoading) {
             notify("Reloading Buses!");
             dispatch(getVehicles(cookies.jwt_token));
-        }
-    }
-
-    const checkRefreshTimer = (lastUpdate: string) => {
-        const {currHour, currMin} = getCurrentTime();
-        const fSplit = lastUpdate.split(":");
-        let fHour = Number(fSplit[0]);
-        const splitMin = fSplit[1].split(" ");
-        const fMin = Number(splitMin[0]);
-        const amPm = splitMin[1][0];
-        if (amPm === 'P') {fHour += 12};
-        
-        //If more than 3 mins since last update refresh buses
-        if (fHour <= currHour && Math.abs(currMin - fMin) > 1){
-            notify("Bus Positions should be refreshed!");
         }
     }
 
@@ -148,7 +108,10 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
             setStopsNotified(true);
             notify('🦄 Bus Stops have loaded!');
 
-        } else if (mapState && !mapState.stopsLoaded)
+        } else if (mapState && !mapState.stopsLoaded && !mapState.stopsLoading) {
+            notify("Error Fetching stops - Try Refreshing!")
+        }
+        
         if (mapState && mapState.vehiclesLoaded && !busNotified) {
             setBusNotified(true);
             notify('🦄 Bus Positions have loaded!');
@@ -170,7 +133,7 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
         } else if (mapState && mapState.vehiclesError) {
             notify("⚠️Error Loading Buses! - Try Refreshing!⚠️");
         }
-        if (mapState && !mapState.linesLoaded && !mapState.lines){
+        if (mapState && !mapState.linesLoaded && !mapState.linesLoading){
             dispatch(getTransitLines(cookies.jwt_token));
         } else if (mapState && mapState.linesError) {
             notify("⚠️Error Loading Bus Tranist Lines - Try Refreshing!⚠️");
@@ -200,7 +163,7 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                         mapContainerStyle={{width: '100%', height: '100%'}}
                         onLoad={(map: any) => setMap(map)}
                     >
-                        {mapState.transitLines.map((line: any, index: number) => {
+                        {mapState && mapState.transitLines.map((line: any, index: number) => {
                             return (
                                 <Polyline 
                                     key={index} 
@@ -213,8 +176,8 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                             icon={{url: require('../assets/user.svg').default}
                         }
                         />
-                        {mapState.directions && <DirectionsRenderer directions={JSON.parse(mapState.directions)}/>}
-                        {mapState.static_stops.map((stop: any, index: number) => {
+                        {mapState && mapState.directions && <DirectionsRenderer directions={JSON.parse(mapState.directions)}/>}
+                        {mapState && mapState.static_stops.length > 0 && mapState.static_stops.map((stop: any, index: number) => {
                             return (
                             <MarkerF 
                                 key={index} position={{lat: stop.stop_lat, lng: stop.stop_lon}}
@@ -253,7 +216,7 @@ export default function Map({cookies, dispatch, notify, removeCookie }: {cookies
                                 ) : null}
                             </MarkerF>)
                         })}
-                        {mapState.vehicles.length > 0 && mapState.vehicles.map((vehicle: any, index: number) => {
+                        {mapState && mapState.vehicles.length > 0 && mapState.vehicles.map((vehicle: any, index: number) => {
                             return (
                                 <MarkerF 
                                     key={index} 

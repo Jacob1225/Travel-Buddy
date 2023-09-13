@@ -1,15 +1,13 @@
-from inspect import trace
-import requests
 import traceback
 import sys
-import json
 from os import path
-from jwt import InvalidSignatureError, ExpiredSignatureError
+from jwt import InvalidSignatureError
 from werkzeug.exceptions import BadRequest
 
 sys.path.append(path.join(path.dirname(__file__), "."))
 
 from libraries.security import Authenticator
+from libraries.util import make_authorized_request
 
 """
     Request handler is the entry point to all microservices
@@ -41,6 +39,7 @@ def request_handler(request):
 
     # cipher = request.data
     payload = request.get_json()
+    print("PAYLOAD: ", payload)
 
     if not payload:
         raise BadRequest(description="Bad Request: no payload given")
@@ -66,14 +65,14 @@ def request_handler(request):
             # google credentials valid and jwt is being used
             new_jwt = authenticator.validate_token(request.headers["Authorization"])
 
-        # Refresh jwt token in headers if expired
-        inner_headers = {
-            "Authorization": new_jwt if new_jwt else request.headers["Authorization"],
-            "Content-Type": "application/json",
-        }
+        else:
+            payload["token"] = request.headers["Authorization"]
 
-        res = requests.post(url=target_url, json=payload, headers=inner_headers)
-        response = res.json()
+        res = make_authorized_request(target_url, payload)
+
+        if res:
+            response = res.json()
+
         if new_jwt:
             response["new_token"] = new_jwt
 
@@ -88,7 +87,7 @@ def request_handler(request):
         if e == "improper encryption":
             return ({"message": "payload is improperly encrypted"}, 400, headers)
         else:
-            return ({"message": "Invalid or Expired Google Credentials"}, 403, headers)
+            return ({"message": str(e)}, 403, headers)
 
     except InvalidSignatureError:
         return ({"message": "jwt signature invalid:"}, 403, headers)

@@ -22,7 +22,8 @@ const persistConfig: any = {
       'linesLoaded', 
       'initNotify',
       'stopsLoading',
-      'vehiclesLoading'
+      'vehiclesLoading',
+      'times'
     ]
   };
   

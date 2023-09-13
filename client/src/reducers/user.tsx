@@ -23,10 +23,10 @@ export const validateUser =  createAsyncThunk(
         try{
             const payload = {
                 "target_name": "authenticate_user",
-                "target_url": `${process.env.REACT_APP_DEV_AUTH}`
+                "target_url": `${process.env.REACT_APP_PROD_AUTH}`
             }
             
-            const res = await axios.post(`${process.env.REACT_APP_DEV_API_URL}`, payload,
+            const res = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, payload,
                 {
                     headers: {
                         "Authorization": data,

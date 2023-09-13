@@ -2,6 +2,29 @@ from math import sin, cos, sqrt, atan2, radians
 from typing import List
 from libraries.common import StopSequenceObj, TripDocument
 
+import requests
+import google.auth.transport.requests
+import google.oauth2.id_token
+
+
+"""
+    Generates a google id token to make authorized
+    requests to cloud functions
+"""
+
+
+def make_authorized_request(endpoint, payload):
+
+    auth_req = google.auth.transport.requests.Request()
+    id_token = google.oauth2.id_token.fetch_id_token(auth_req, endpoint)
+
+    headers = {"Authorization": f"Bearer {id_token}", "Content-Type": "application/json"}
+    response = requests.post(url=endpoint, json=payload, headers=headers)
+
+    response.raise_for_status()
+
+    return response
+
 
 """
     calculates the distance between two coordinates
@@ -9,10 +32,10 @@ from libraries.common import StopSequenceObj, TripDocument
 
 
 def calculate_distance(lat1: float, lat2: float, lon1: float, lon2: float) -> float:
-    
+
     lat1 = float(lat1)
     lat2 = float(lat2)
-    lon1 = float(lon1) 
+    lon1 = float(lon1)
     lon2 = float(lon2)
 
     # radius of the earth in km
@@ -34,6 +57,7 @@ def calculate_distance(lat1: float, lat2: float, lon1: float, lon2: float) -> fl
 
     return distance
 
+
 """
     Creates a trip list document
     Useful to retrieve trip information from a trip_id
@@ -47,13 +71,13 @@ def get_trip_list(trips, static_trips, static_stops) -> List:
     # process the feed
     for entity in trips:
         stop_list = []
-        
-        if entity.HasField('trip_update'):
-            for stop in entity.trip_update.stop_time_update:
-                if stop.HasField('stop_sequence'):
 
-                    stop_row = static_stops[static_stops['stop_id'] == stop.stop_id]
-                    stop_name = stop_row.values[0][1] if len(stop_row) == 1 else 'N/A'
+        if entity.HasField("trip_update"):
+            for stop in entity.trip_update.stop_time_update:
+                if stop.HasField("stop_sequence"):
+
+                    stop_row = static_stops[static_stops["stop_id"] == stop.stop_id]
+                    stop_name = stop_row.values[0][1] if len(stop_row) == 1 else "N/A"
 
                     # create the stop sequence object
                     stop_obj = StopSequenceObj.from_dict(

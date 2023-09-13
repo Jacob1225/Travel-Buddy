@@ -30,9 +30,10 @@ export interface MapState {
     linesError: boolean,
     linesLoading: boolean
     linesLoaded: boolean
-    static_stops: any[],
-    vehicles: any[],
-    transitLines: any[],
+    static_stops: Object[],
+    vehicles: Object[],
+    transitLines: Object[],
+    times: Object[]
 }
 
 const initialState = {
@@ -59,7 +60,8 @@ const initialState = {
     linesLoaded: false,
     static_stops: [],
     vehicles: [],
-    transitLines: []
+    transitLines: [],
+    times: []
 } as MapState
 
 /* Fetch data async */
@@ -67,18 +69,59 @@ export const getStops =  createAsyncThunk(
     'map/getStops',
     async(data: string, thunkApi) => {
         try{
+            // const timePayload = {
+            //     "target_name": "get times",
+            //     "target_url": `${process.env.REACT_APP_PROD_URL_TIMES}`
+            // }
             const payload = {
                 "target_name": "get stops",
-                "target_url": `${process.env.REACT_APP_DEV_URL_STOPS}`
+                "target_url": `${process.env.REACT_APP_PROD_URL_STOPS}`
             }
 
-            const res = await axios.post(`${process.env.REACT_APP_DEV_API_URL}`, payload,
+            console.log(payload)
+
+            const res = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, payload,
             {
                 headers: {
                     "Authorization": data!,
                     "Content-Type": "application/json"
                 }
             })
+            console.log(res)
+            // const timeRes = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, timePayload,
+            // {
+            //     headers: {
+            //         "Authorization": data!,
+            //         "Content-Type": "application/json"
+            //     }
+            // })
+            
+            return res.data;
+        } catch(error: any) {
+            console.log(error)
+            return thunkApi.rejectWithValue(error.response.data);
+        }
+    }
+)
+
+export const getTimes =  createAsyncThunk(
+    'map/getTimes',
+    async(data: string, thunkApi) => {
+        try{
+            const payload = {
+                "target_name": "get arrival times",
+                "target_url": `${process.env.REACT_APP_PROD_URL_TIMES}`
+            }
+
+            const res = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, payload,
+            {
+                headers: {
+                    "Authorization": data!,
+                    "Content-Type": "application/json"
+                }
+            })
+            console.log('times : ', res)
+
             return res.data
         } catch(error: any) {
             console.log(error)
@@ -92,16 +135,18 @@ export const getVehicles = createAsyncThunk(
         try{
             const payload = {
                 "target_name": "get vehicles",
-                "target_url": `${process.env.REACT_APP_DEV_URL_VEHICLES}`
+                "target_url": `${process.env.REACT_APP_PROD_URL_VEHICLES}`
             }
 
-            const res = await axios.post(`${process.env.REACT_APP_DEV_API_URL}`, payload,
+            const res = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, payload,
             {
                 headers: {
                     "Authorization": data!,
                     "Content-Type": "application/json"
                 }
             })
+            console.log('vehicles: ', res)
+
             return res.data
         } catch(error: any) {
             console.log(error)
@@ -116,16 +161,17 @@ export const getTransitLines =  createAsyncThunk(
         try{
             const payload = {
                 "target_name": "get transit lines",
-                "target_url": `${process.env.REACT_APP_DEV_URL_LINES}`
+                "target_url": `${process.env.REACT_APP_PROD_URL_LINES}`
             }
 
-            const res = await axios.post(`${process.env.REACT_APP_DEV_API_URL}`, payload,
+            const res = await axios.post(`${process.env.REACT_APP_PROD_API_URL}`, payload,
             {
                 headers: {
                     "Authorization": data!,
                     "Content-Type": "application/json"
                 }
             })
+            console.log('transit lines: ', res)
             return res.data
         } catch(error: any) {
             console.log(error)
@@ -181,7 +227,7 @@ const mapSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        builder.addCase(getStops.pending, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getStops.pending, (state: MapState) => {
             return {
                 ...state,
                 stopsError: false,
@@ -196,15 +242,14 @@ const mapSlice = createSlice({
                 static_stops: action.payload.data
             }
         })
-        builder.addCase(getStops.rejected, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getStops.rejected, (state: MapState) => {
             return {
                 ...state,
                 stopsError: true,
                 stopsLoading: false,
-                static_stops: action.payload.data
             }
         })
-        builder.addCase(getVehicles.pending, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getVehicles.pending, (state: MapState) => {
             return {
                 ...state,
                 vehiclesError: false,
@@ -219,14 +264,14 @@ const mapSlice = createSlice({
                 vehicles: action.payload.data
             }
         })
-        builder.addCase(getVehicles.rejected, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getVehicles.rejected, (state: MapState) => {
             return {
                 ...state,
                 vehiclesError: true,
                 vehiclesLoading: false,
             }
         })
-        builder.addCase(getTransitLines.pending, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getTransitLines.pending, (state: MapState) => {
             return {
                 ...state,
                 linesError: false,
@@ -241,11 +286,17 @@ const mapSlice = createSlice({
                 transitLines: action.payload.data
             }
         })
-        builder.addCase(getTransitLines.rejected, (state: MapState, action: PayloadAction<any>) => {
+        builder.addCase(getTransitLines.rejected, (state: MapState) => {
             return {
                 ...state,
                 linesError: true,
                 linesLoading: false,
+            }
+        })
+        builder.addCase(getTimes.fulfilled, (state: MapState, action: PayloadAction<any>) => {
+            return {
+                ...state,
+                times: action.payload.data
             }
         })
     },
