@@ -1,6 +1,7 @@
 .vscode
 environments
 cloud_build
+build
 bin
 *.json
 __pycache__
