@@ -1,4 +1,5 @@
 import json, os
+from multiprocessing.sharedctypes import Value
 import traceback
 import jwt
 from dotenv import load_dotenv
@@ -137,7 +138,7 @@ class Authenticator:
             # ID token is valid - check if user is allowed to sign in
             # Only allow test users to sign in
             if idinfo["email"] in self.allowed_user:
-                raise ValueError("Google user has insufficient access")
+                raise ValueError("Insufficient access")
 
             encoded_jwt = self.generate_token(
                 {
@@ -149,7 +150,10 @@ class Authenticator:
 
         except ValueError as e:
             # Invalid token or User is not test user
-            raise ValueError("Invalid or Expired Google Token")
+            if e == "Insufficient access":
+                raise ValueError(e)
+            else:
+                raise ValueError("Invalid or Expired Google Credentials")
 
         except Exception as e:
             # Other unknown exceptions to be caught/raised
