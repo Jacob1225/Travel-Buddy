@@ -1,6 +1,8 @@
 import traceback
 import sys
+import os
 from os import path
+from dotenv import load_dotenv
 from jwt import InvalidSignatureError
 from werkzeug.exceptions import BadRequest
 
@@ -20,14 +22,24 @@ from libraries.util import make_authorized_request
 """
 authenticator = Authenticator()
 
+# For local testing only - must be changed for each developers local path to .env
+load_dotenv(dotenv_path="/Users/jacobcarlone/Travel-Buddy/server/microservices/environments/.env")
+
 
 def request_handler(request):
+    allowed_origins = None
+
+    if "GCP_PROJECT" in os.environ:
+        # Production env
+        allowed_origins = os.environ["PROD_ORIGIN"]
+    else:
+        allowed_origins = os.getenv("DEV_ORIGIN")
 
     if request.method == "OPTIONS":
         # Allows GET requests from any origin with the Content-Type
         # header and caches preflight response for an 3600s
         headers = {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": allowed_origins,
             "Access-Control-Allow-Methods": ["GET", "POST"],
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Max-Age": "3600",
@@ -35,7 +47,7 @@ def request_handler(request):
 
         return ("", 204, headers)
 
-    headers = {"Access-Control-Allow-Origin": "*"}
+    headers = {"Access-Control-Allow-Origin": allowed_origins}
 
     # cipher = request.data
     payload = request.get_json()
