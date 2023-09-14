@@ -19,13 +19,13 @@ class Authenticator:
     def __init__(self):
         if "GCP_PROJECT" in os.environ:
             self.project_id = os.environ["GCP_PROJECT"]
-            self.allowed_user = os.environ["ALLOWED_USERS"]
+            self.allowed_user = os.environ["ALLOWED_USERS"].split(" ")
             self.pk_pwd = os.environ["PRIVATE_KEY_PWD"]
             self.client_id = os.environ["CLIENT_ID"]
 
         # else cloud function is running locally
         else:
-            self.allowed_user = os.getenv("ALLOWED_USERS")
+            self.allowed_user = os.getenv("ALLOWED_USERS").split(" ")
             self.pk_pwd = os.getenv("PRIVATE_KEY_PWD")
             self.client_id = os.getenv("CLIENT_ID")
 
@@ -136,7 +136,7 @@ class Authenticator:
 
             # ID token is valid - check if user is allowed to sign in
             # Only allow test users to sign in
-            if idinfo["email"] != self.allowed_user:
+            if idinfo["email"] in self.allowed_user:
                 raise ValueError("Google user has insufficient access")
 
             encoded_jwt = self.generate_token(
